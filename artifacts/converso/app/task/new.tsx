@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { TaskType, TASK_TYPES } from "@/types";
 
@@ -21,7 +21,7 @@ export default function NewTaskScreen() {
   const { addTask, leads } = useApp();
   const params = useLocalSearchParams<{ leadId?: string; leadName?: string }>();
   const insets = useSafeAreaInsets();
-  const c = Colors.light;
+  const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const now = new Date();

@@ -11,14 +11,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/EmptyState";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { formatDate } from "@/utils";
 
 export default function PerdidosScreen() {
   const { leads } = useApp();
   const insets = useSafeAreaInsets();
-  const c = Colors.light;
+  const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const perdidos = leads.filter((l) => l.stage === "Perdido");
 
@@ -51,12 +51,12 @@ export default function PerdidosScreen() {
                 <Text style={[styles.name, { color: c.text }]}>{item.nome}</Text>
                 <Text style={[styles.phone, { color: c.textSecondary }]}>{item.telefone}</Text>
               </View>
-              <View style={[styles.originBadge, { backgroundColor: "#fef2f2" }]}>
+              <View style={[styles.originBadge, { backgroundColor: c.tagLost }]}>
                 <Text style={[styles.originText, { color: c.danger }]}>{item.origem}</Text>
               </View>
             </View>
             {item.motivoPerdido ? (
-              <View style={[styles.motiveWrap, { backgroundColor: "#fef2f2", borderColor: "#fecaca" }]}>
+              <View style={[styles.motiveWrap, { backgroundColor: c.tagLost, borderColor: c.border }]}>
                 <Feather name="alert-circle" size={12} color={c.danger} />
                 <Text style={[styles.motive, { color: c.danger }]}>{item.motivoPerdido}</Text>
               </View>

@@ -3,10 +3,11 @@ import { Tabs } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
-import Colors from "@/constants/colors";
+import { useTheme, useThemeMode } from "@/contexts/ThemeContext";
 
 export default function TabLayout() {
-  const c = Colors.light;
+  const c = useTheme();
+  const { theme } = useThemeMode();
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
 
@@ -28,7 +29,7 @@ export default function TabLayout() {
           isIOS ? (
             <BlurView
               intensity={100}
-              tint="light"
+              tint={theme === "dark" ? "dark" : "light"}
               style={StyleSheet.absoluteFill}
             />
           ) : (

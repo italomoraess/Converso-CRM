@@ -4,7 +4,6 @@ import React, { useMemo, useState } from "react";
 import {
   FlatList,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,7 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/EmptyState";
 import { FAB } from "@/components/FAB";
 import { TaskItem } from "@/components/TaskItem";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { formatDate, todayISO } from "@/utils";
 
@@ -24,7 +23,7 @@ export default function AgendaScreen() {
   const { tasks } = useApp();
   const [filter, setFilter] = useState<Filter>("hoje");
   const insets = useSafeAreaInsets();
-  const c = Colors.light;
+  const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const today = todayISO();
 

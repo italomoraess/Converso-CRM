@@ -3,8 +3,8 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   FlatList,
+  Linking,
   Modal,
   Platform,
   ScrollView,
@@ -15,11 +15,10 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { FunnelStage, Lead, FUNNEL_STAGES } from "@/types";
 import { getKanbanColumnColor, getStageBadgeStyle, getWhatsAppUrl } from "@/utils";
-import { Linking } from "react-native";
 
 function KanbanCardItem({
   lead,
@@ -30,8 +29,8 @@ function KanbanCardItem({
   stages: FunnelStage[];
   onMoveStage: (lead: Lead, stage: FunnelStage) => void;
 }) {
-  const c = Colors.light;
-  const stageBadge = getStageBadgeStyle(lead.stage);
+  const c = useTheme();
+  const stageBadge = getStageBadgeStyle(lead.stage, c);
 
   return (
     <View style={[styles.kCard, { backgroundColor: c.surface, borderColor: c.border }]}>
@@ -84,7 +83,7 @@ function KanbanCardItem({
 export default function KanbanScreen() {
   const { leads, updateLeadStage } = useApp();
   const insets = useSafeAreaInsets();
-  const c = Colors.light;
+  const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const [lostModal, setLostModal] = useState<{ lead: Lead } | null>(null);
@@ -274,7 +273,7 @@ const styles = StyleSheet.create({
   lostBtnText: { fontSize: 12, fontWeight: "500", fontFamily: "Inter_500Medium" },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
   },
   modalCard: {

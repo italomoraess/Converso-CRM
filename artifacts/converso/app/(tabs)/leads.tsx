@@ -14,14 +14,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/EmptyState";
 import { FAB } from "@/components/FAB";
 import { LeadCard } from "@/components/LeadCard";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 
 export default function LeadsScreen() {
   const { leads } = useApp();
   const [search, setSearch] = useState("");
   const insets = useSafeAreaInsets();
-  const c = Colors.light;
+  const c = useTheme();
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();

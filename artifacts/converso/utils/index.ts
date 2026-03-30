@@ -1,4 +1,5 @@
 import { FunnelStage, LeadOrigin } from "@/types";
+import { ColorScheme } from "@/constants/colors";
 import Colors from "@/constants/colors";
 
 export function formatPhone(raw: string): string {
@@ -39,8 +40,8 @@ export function getWhatsAppUrl(phone: string): string {
   return `https://wa.me/${withCountry}`;
 }
 
-export function getStageBadgeStyle(stage: FunnelStage) {
-  const c = Colors.light;
+export function getStageBadgeStyle(stage: FunnelStage, colors?: ColorScheme) {
+  const c = colors ?? Colors.light;
   switch (stage) {
     case "Novo Lead":
       return { bg: c.tagNew, text: c.tagNewText };
@@ -59,8 +60,8 @@ export function getStageBadgeStyle(stage: FunnelStage) {
   }
 }
 
-export function getOriginBadgeStyle(origin: LeadOrigin) {
-  const c = Colors.light;
+export function getOriginBadgeStyle(origin: LeadOrigin, colors?: ColorScheme) {
+  const c = colors ?? Colors.light;
   switch (origin) {
     case "Instagram":
       return { bg: c.originInstagram, text: c.originInstagramText };

@@ -5,7 +5,6 @@ import React, { useState } from "react";
 import {
   Alert,
   Platform,
-  ScrollView,
   StyleSheet,
   Switch,
   Text,
@@ -15,7 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { FunnelStage, LeadOrigin, LEAD_ORIGINS } from "@/types";
 import { formatPhone } from "@/utils";
@@ -23,7 +22,7 @@ import { formatPhone } from "@/utils";
 export default function NewLeadScreen() {
   const { addLead } = useApp();
   const insets = useSafeAreaInsets();
-  const c = Colors.light;
+  const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const [form, setForm] = useState({

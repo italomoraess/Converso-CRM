@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { Platform, StyleSheet, TouchableOpacity } from "react-native";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Props {
   onPress: () => void;
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function FAB({ onPress, testID }: Props) {
-  const c = Colors.light;
+  const c = useTheme();
   async function handlePress() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress();

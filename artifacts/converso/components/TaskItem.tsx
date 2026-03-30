@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { Task } from "@/types";
 import { formatDateTime } from "@/utils";
@@ -27,7 +27,7 @@ interface Props {
 
 export function TaskItem({ task }: Props) {
   const { toggleTaskComplete, deleteTask } = useApp();
-  const c = Colors.light;
+  const c = useTheme();
   const iconName = (TYPE_ICONS[task.type] ?? "check-square") as keyof typeof Feather.glyphMap;
 
   async function onToggle() {
@@ -66,7 +66,7 @@ export function TaskItem({ task }: Props) {
         {task.completed && <Feather name="check" size={14} color="#fff" />}
       </TouchableOpacity>
 
-      <View style={styles.iconWrap}>
+      <View style={[styles.iconWrap, { backgroundColor: c.tint + "20" }]}>
         <Feather name={iconName} size={16} color={task.completed ? c.textMuted : c.tint} />
       </View>
 
@@ -123,7 +123,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#eff6ff",
     alignItems: "center",
     justifyContent: "center",
   },

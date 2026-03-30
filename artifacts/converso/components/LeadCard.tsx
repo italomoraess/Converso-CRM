@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Lead } from "@/types";
 import {
   formatDate,
@@ -23,9 +23,9 @@ interface Props {
 }
 
 export function LeadCard({ lead }: Props) {
-  const c = Colors.light;
-  const stageBadge = getStageBadgeStyle(lead.stage);
-  const originBadge = getOriginBadgeStyle(lead.origem);
+  const c = useTheme();
+  const stageBadge = getStageBadgeStyle(lead.stage, c);
+  const originBadge = getOriginBadgeStyle(lead.origem, c);
 
   function onPress() {
     router.push(`/lead/${lead.id}`);

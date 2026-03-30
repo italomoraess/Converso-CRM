@@ -1,7 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
-  Dimensions,
   Platform,
   ScrollView,
   StyleSheet,
@@ -10,12 +9,11 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { Lead, LeadOrigin, LEAD_ORIGINS } from "@/types";
 import { formatCurrency, formatDate } from "@/utils";
-
-const SCREEN_W = Dimensions.get("window").width;
+import { ColorScheme } from "@/constants/colors";
 
 type Period = "semana" | "mes" | "tudo";
 
@@ -33,8 +31,7 @@ function getDateRange(period: Period): { from: Date; label: string } {
   return { from: new Date(0), label: "Todo período" };
 }
 
-function StatCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
-  const c = Colors.light;
+function StatCard({ label, value, sub, color, c }: { label: string; value: string; sub?: string; color?: string; c: ColorScheme }) {
   return (
     <View style={[styles.statCard, { backgroundColor: c.surface, borderColor: c.border }]}>
       <Text style={[styles.statValue, { color: color ?? c.tint }]}>{value}</Text>
@@ -44,14 +41,13 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
   );
 }
 
-function BarChart({ data }: { data: { label: string; value: number }[] }) {
-  const c = Colors.light;
+function BarChart({ data, c }: { data: { label: string; value: number }[]; c: ColorScheme }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
     <View style={styles.barChart}>
       {data.map((d, i) => (
         <View key={i} style={styles.barItem}>
-          <View style={styles.barTrack}>
+          <View style={[styles.barTrack, { backgroundColor: c.border }]}>
             <View
               style={[
                 styles.barFill,
@@ -67,8 +63,7 @@ function BarChart({ data }: { data: { label: string; value: number }[] }) {
   );
 }
 
-function PieChart({ data }: { data: { label: string; value: number; color: string }[] }) {
-  const c = Colors.light;
+function PieChart({ data, c }: { data: { label: string; value: number; color: string }[]; c: ColorScheme }) {
   const total = data.reduce((s, d) => s + d.value, 0) || 1;
   return (
     <View style={styles.pieWrap}>
@@ -91,7 +86,7 @@ export default function RelatoriosScreen() {
   const { leads } = useApp();
   const [period, setPeriod] = useState<Period>("mes");
   const insets = useSafeAreaInsets();
-  const c = Colors.light;
+  const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const { from, label } = getDateRange(period);
@@ -162,23 +157,23 @@ export default function RelatoriosScreen() {
         <Text style={[styles.sectionTitle, { color: c.textSecondary }]}>{label}</Text>
 
         <View style={styles.statsGrid}>
-          <StatCard label="Total Leads" value={String(totalLeads)} />
-          <StatCard label="Fechados" value={String(fechados)} color={c.success} />
-          <StatCard label="Conversão" value={`${conversion}%`} color={conversion >= 30 ? c.success : c.warning} />
-          <StatCard label="Perdidos" value={String(perdidos.length)} color={c.danger} />
+          <StatCard label="Total Leads" value={String(totalLeads)} c={c} />
+          <StatCard label="Fechados" value={String(fechados)} color={c.success} c={c} />
+          <StatCard label="Conversão" value={`${conversion}%`} color={conversion >= 30 ? c.success : c.warning} c={c} />
+          <StatCard label="Perdidos" value={String(perdidos.length)} color={c.danger} c={c} />
         </View>
 
         {leadsPerWeek.length > 0 && (
           <View style={[styles.chartCard, { backgroundColor: c.surface, borderColor: c.border }]}>
             <Text style={[styles.chartTitle, { color: c.text }]}>Leads por semana</Text>
-            <BarChart data={leadsPerWeek} />
+            <BarChart data={leadsPerWeek} c={c} />
           </View>
         )}
 
         {byOrigin.length > 0 && (
           <View style={[styles.chartCard, { backgroundColor: c.surface, borderColor: c.border }]}>
             <Text style={[styles.chartTitle, { color: c.text }]}>Leads por origem</Text>
-            <PieChart data={byOrigin} />
+            <PieChart data={byOrigin} c={c} />
           </View>
         )}
 
@@ -257,7 +252,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   barItem: { flex: 1, alignItems: "center", height: "100%" },
-  barTrack: { flex: 1, width: "100%", justifyContent: "flex-end" },
+  barTrack: { flex: 1, width: "100%", justifyContent: "flex-end", borderRadius: 4 },
   barFill: { borderRadius: 4, width: "100%" },
   barLabel: { fontSize: 9, marginTop: 4, fontFamily: "Inter_400Regular" },
   barValue: { fontSize: 10, fontWeight: "600" },

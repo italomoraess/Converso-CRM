@@ -3,7 +3,6 @@ import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import {
   Alert,
-  FlatList,
   Modal,
   Platform,
   SectionList,
@@ -15,7 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/EmptyState";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { CatalogCategory, CatalogProduct } from "@/types";
 import { formatCurrency } from "@/utils";
@@ -23,7 +22,7 @@ import { formatCurrency } from "@/utils";
 export default function CatalogoScreen() {
   const { categories, products, addCategory, deleteCategory, addProduct, deleteProduct } = useApp();
   const insets = useSafeAreaInsets();
-  const c = Colors.light;
+  const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const [catModal, setCatModal] = useState(false);
@@ -291,7 +290,7 @@ const styles = StyleSheet.create({
   productPrice: { fontSize: 15, fontWeight: "700", fontFamily: "Inter_700Bold" },
   productDuration: { fontSize: 12, fontFamily: "Inter_400Regular" },
   productDesc: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
   modalCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, gap: 12 },
   modalTitle: { fontSize: 18, fontWeight: "700", fontFamily: "Inter_700Bold" },
   input: {

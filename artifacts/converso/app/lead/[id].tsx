@@ -13,8 +13,9 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
+import { ColorScheme } from "@/constants/colors";
 import { FunnelStage, FUNNEL_STAGES } from "@/types";
 import { formatDate, formatDateTime, getKanbanColumnColor, getOriginBadgeStyle, getStageBadgeStyle, getWhatsAppUrl } from "@/utils";
 
@@ -23,7 +24,7 @@ export default function LeadDetailScreen() {
   const { leads, deleteLead, updateLeadStage } = useApp();
   const lead = leads.find((l) => l.id === id);
   const insets = useSafeAreaInsets();
-  const c = Colors.light;
+  const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const [stageModal, setStageModal] = useState(false);
@@ -39,8 +40,8 @@ export default function LeadDetailScreen() {
     );
   }
 
-  const stageBadge = getStageBadgeStyle(lead.stage);
-  const originBadge = getOriginBadgeStyle(lead.origem);
+  const stageBadge = getStageBadgeStyle(lead.stage, c);
+  const originBadge = getOriginBadgeStyle(lead.origem, c);
 
   async function handleWhatsApp() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -104,7 +105,7 @@ export default function LeadDetailScreen() {
           </View>
 
           {lead.stage === "Perdido" && lead.motivoPerdido && (
-            <View style={[styles.motiveWrap, { backgroundColor: "#fef2f2" }]}>
+            <View style={[styles.motiveWrap, { backgroundColor: c.tagLost }]}>
               <Feather name="alert-circle" size={14} color={c.danger} />
               <Text style={[styles.motiveText, { color: c.danger }]}>{lead.motivoPerdido}</Text>
             </View>
@@ -187,10 +188,10 @@ export default function LeadDetailScreen() {
   );
 }
 
-function DetailRow({ icon, label, value, c }: { icon: keyof typeof Feather.glyphMap; label: string; value: string; c: any }) {
+function DetailRow({ icon, label, value, c }: { icon: keyof typeof Feather.glyphMap; label: string; value: string; c: ColorScheme }) {
   return (
     <View style={styles.detailRow}>
-      <View style={[styles.detailIconWrap, { backgroundColor: "#eff6ff" }]}>
+      <View style={[styles.detailIconWrap, { backgroundColor: c.tint + "18" }]}>
         <Feather name={icon} size={14} color={c.tint} />
       </View>
       <View style={styles.detailInfo}>
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
   obsTitle: { fontSize: 12, fontWeight: "600", fontFamily: "Inter_600SemiBold", marginBottom: 4, textTransform: "uppercase" },
   obsText: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 22 },
   stageOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: "flex-end" },
-  stageBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.4)" },
+  stageBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)" },
   stageSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, gap: 8 },
   stageSheetTitle: { fontSize: 16, fontWeight: "700", fontFamily: "Inter_700Bold", marginBottom: 8 },
   stageOption: { flexDirection: "row", alignItems: "center", gap: 12, borderBottomWidth: 1, paddingVertical: 14 },

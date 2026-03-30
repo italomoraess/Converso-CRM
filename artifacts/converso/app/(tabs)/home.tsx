@@ -12,16 +12,16 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Colors from "@/constants/colors";
+import { useTheme, useThemeMode } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { Lead, Task } from "@/types";
 import {
-  formatCurrency,
   getOriginBadgeStyle,
   getStageBadgeStyle,
   getWhatsAppUrl,
   todayISO,
 } from "@/utils";
+import { ColorScheme } from "@/constants/colors";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -37,6 +37,7 @@ function StatCard({
   sub,
   color,
   onPress,
+  c,
 }: {
   icon: keyof typeof Feather.glyphMap;
   label: string;
@@ -44,8 +45,8 @@ function StatCard({
   sub?: string;
   color: string;
   onPress?: () => void;
+  c: ColorScheme;
 }) {
-  const c = Colors.light;
   return (
     <TouchableOpacity
       style={[styles.statCard, { backgroundColor: c.surface, borderColor: c.border }]}
@@ -67,13 +68,14 @@ function QuickAction({
   label,
   color,
   onPress,
+  c,
 }: {
   icon: keyof typeof Feather.glyphMap;
   label: string;
   color: string;
   onPress: () => void;
+  c: ColorScheme;
 }) {
-  const c = Colors.light;
   async function handle() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress();
@@ -88,10 +90,9 @@ function QuickAction({
   );
 }
 
-function RecentLeadRow({ lead }: { lead: Lead }) {
-  const c = Colors.light;
-  const badge = getStageBadgeStyle(lead.stage);
-  const origin = getOriginBadgeStyle(lead.origem);
+function RecentLeadRow({ lead, c }: { lead: Lead; c: ColorScheme }) {
+  const badge = getStageBadgeStyle(lead.stage, c);
+  const origin = getOriginBadgeStyle(lead.origem, c);
 
   async function onWA() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -123,7 +124,7 @@ function RecentLeadRow({ lead }: { lead: Lead }) {
         </View>
       </View>
       <TouchableOpacity
-        style={[styles.waSmall, { backgroundColor: Colors.light.whatsapp }]}
+        style={[styles.waSmall, { backgroundColor: c.whatsapp }]}
         onPress={onWA}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
@@ -133,9 +134,8 @@ function RecentLeadRow({ lead }: { lead: Lead }) {
   );
 }
 
-function TodayTaskRow({ task }: { task: Task }) {
+function TodayTaskRow({ task, c }: { task: Task; c: ColorScheme }) {
   const { toggleTaskComplete } = useApp();
-  const c = Colors.light;
 
   const TYPE_ICONS: Record<string, keyof typeof Feather.glyphMap> = {
     Ligação: "phone",
@@ -185,7 +185,8 @@ function TodayTaskRow({ task }: { task: Task }) {
 export default function HomeScreen() {
   const { leads, tasks } = useApp();
   const insets = useSafeAreaInsets();
-  const c = Colors.light;
+  const c = useTheme();
+  const { theme, toggleTheme } = useThemeMode();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const today = todayISO();
 
@@ -209,10 +210,14 @@ export default function HomeScreen() {
   );
 
   const newLeads = leads.filter((l) => l.stage === "Novo Lead").length;
-  const lostLeads = leads.filter((l) => l.stage === "Perdido").length;
 
   const now = new Date();
   const dateStr = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+
+  async function handleToggleTheme() {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    toggleTheme();
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
@@ -223,17 +228,25 @@ export default function HomeScreen() {
             <Text style={styles.greetText}>{greeting()} 👋</Text>
             <Text style={styles.dateText}>{dateStr}</Text>
           </View>
-          <TouchableOpacity
-            style={styles.headerNotif}
-            onPress={() => router.push("/agenda")}
-          >
-            <Feather name="bell" size={22} color="rgba(255,255,255,0.85)" />
-            {todayTasks.length > 0 && (
-              <View style={styles.notifBadge}>
-                <Text style={styles.notifBadgeText}>{todayTasks.length}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.headerBtn}
+              onPress={handleToggleTheme}
+            >
+              <Feather name={theme === "dark" ? "sun" : "moon"} size={20} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerBtn}
+              onPress={() => router.push("/agenda")}
+            >
+              <Feather name="bell" size={20} color="rgba(255,255,255,0.85)" />
+              {todayTasks.length > 0 && (
+                <View style={styles.notifBadge}>
+                  <Text style={styles.notifBadgeText}>{todayTasks.length}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -250,6 +263,7 @@ export default function HomeScreen() {
             sub={`+${thisMonthLeads.length} este mês`}
             color={c.tint}
             onPress={() => router.push("/leads")}
+            c={c}
           />
           <StatCard
             icon="trending-up"
@@ -258,6 +272,7 @@ export default function HomeScreen() {
             sub={`${convRate}% conversão`}
             color={c.success}
             onPress={() => router.push("/kanban")}
+            c={c}
           />
           <StatCard
             icon="clock"
@@ -266,6 +281,7 @@ export default function HomeScreen() {
             sub="aguardando contato"
             color={c.warning}
             onPress={() => router.push("/kanban")}
+            c={c}
           />
           <StatCard
             icon="calendar"
@@ -274,6 +290,7 @@ export default function HomeScreen() {
             sub={todayTasks.length === 0 ? "nenhuma pendente" : "pendentes"}
             color={todayTasks.length > 0 ? c.danger : c.success}
             onPress={() => router.push("/agenda")}
+            c={c}
           />
         </View>
 
@@ -281,36 +298,16 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: c.text }]}>Ações Rápidas</Text>
           <View style={styles.quickGrid}>
-            <QuickAction
-              icon="user-plus"
-              label="Novo Lead"
-              color={c.tint}
-              onPress={() => router.push("/lead/new")}
-            />
-            <QuickAction
-              icon="calendar"
-              label="Nova Tarefa"
-              color={c.secondary}
-              onPress={() => router.push("/task/new")}
-            />
-            <QuickAction
-              icon="trello"
-              label="Ver Funil"
-              color="#8b5cf6"
-              onPress={() => router.push("/kanban")}
-            />
-            <QuickAction
-              icon="bar-chart-2"
-              label="Relatórios"
-              color={c.success}
-              onPress={() => router.push("/relatorios")}
-            />
+            <QuickAction icon="user-plus" label="Novo Lead" color={c.tint} onPress={() => router.push("/lead/new")} c={c} />
+            <QuickAction icon="calendar" label="Nova Tarefa" color={c.secondary} onPress={() => router.push("/task/new")} c={c} />
+            <QuickAction icon="trello" label="Ver Funil" color="#8b5cf6" onPress={() => router.push("/kanban")} c={c} />
+            <QuickAction icon="bar-chart-2" label="Relatórios" color={c.success} onPress={() => router.push("/relatorios")} c={c} />
           </View>
         </View>
 
         {/* Today's Tasks */}
         {todayTasks.length > 0 && (
-          <View style={[styles.section]}>
+          <View style={styles.section}>
             <View style={styles.sectionRow}>
               <Text style={[styles.sectionTitle, { color: c.text }]}>Tarefas de Hoje</Text>
               <TouchableOpacity onPress={() => router.push("/agenda")}>
@@ -319,16 +316,11 @@ export default function HomeScreen() {
             </View>
             <View style={[styles.listCard, { backgroundColor: c.surface, borderColor: c.border }]}>
               {todayTasks.slice(0, 4).map((t) => (
-                <TodayTaskRow key={t.id} task={t} />
+                <TodayTaskRow key={t.id} task={t} c={c} />
               ))}
               {todayTasks.length > 4 && (
-                <TouchableOpacity
-                  style={styles.moreRow}
-                  onPress={() => router.push("/agenda")}
-                >
-                  <Text style={[styles.moreText, { color: c.tint }]}>
-                    +{todayTasks.length - 4} mais tarefas
-                  </Text>
+                <TouchableOpacity style={styles.moreRow} onPress={() => router.push("/agenda")}>
+                  <Text style={[styles.moreText, { color: c.tint }]}>+{todayTasks.length - 4} mais tarefas</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -361,7 +353,7 @@ export default function HomeScreen() {
                   <Text style={[styles.funnelLabel, { color: c.text }]} numberOfLines={1}>
                     {item.label}
                   </Text>
-                  <View style={styles.funnelBarTrack}>
+                  <View style={[styles.funnelBarTrack, { backgroundColor: c.border }]}>
                     <View
                       style={[
                         styles.funnelBarFill,
@@ -387,13 +379,13 @@ export default function HomeScreen() {
             </View>
             <View style={[styles.listCard, { backgroundColor: c.surface, borderColor: c.border }]}>
               {recentLeads.map((l) => (
-                <RecentLeadRow key={l.id} lead={l} />
+                <RecentLeadRow key={l.id} lead={l} c={c} />
               ))}
             </View>
           </View>
         )}
 
-        {/* Empty state for fresh install */}
+        {/* Empty state */}
         {leads.length === 0 && (
           <View style={[styles.emptyCard, { backgroundColor: c.surface, borderColor: c.border }]}>
             <View style={[styles.emptyIcon, { backgroundColor: c.tint + "12" }]}>
@@ -441,7 +433,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textTransform: "capitalize",
   },
-  headerNotif: { position: "relative", padding: 4 },
+  headerActions: { flexDirection: "row", gap: 8, alignItems: "center" },
+  headerBtn: { position: "relative", padding: 6 },
   notifBadge: {
     position: "absolute",
     top: 2,
@@ -565,7 +558,7 @@ const styles = StyleSheet.create({
   funnelRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   funnelDot: { width: 8, height: 8, borderRadius: 4 },
   funnelLabel: { width: 130, fontSize: 13, fontFamily: "Inter_400Regular" },
-  funnelBarTrack: { flex: 1, height: 6, backgroundColor: "#f3f4f6", borderRadius: 3, overflow: "hidden" },
+  funnelBarTrack: { flex: 1, height: 6, borderRadius: 3, overflow: "hidden" },
   funnelBarFill: { height: "100%", borderRadius: 3 },
   funnelCount: { width: 24, textAlign: "right", fontSize: 13, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
 

@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Props {
   icon: keyof typeof Feather.glyphMap;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function EmptyState({ icon, title, subtitle, ctaLabel, onCta }: Props) {
-  const c = Colors.light;
+  const c = useTheme();
   return (
     <View style={styles.container}>
       <View style={[styles.iconWrap, { backgroundColor: c.borderLight }]}>

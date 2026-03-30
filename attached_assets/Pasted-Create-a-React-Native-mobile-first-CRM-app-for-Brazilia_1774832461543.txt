@@ -1,0 +1,125 @@
+Create a React Native mobile-first CRM app for Brazilian small businesses and freelancers called "MiniCRM" (or placeholder name).
+
+## Tech Stack
+- React Native (Expo)
+- TypeScript
+- React Navigation (bottom tabs + stack)
+- React Query (TanStack Query) for API calls
+- Zustand for local state management
+- React Native Reanimated for drag-and-drop
+- Axios for HTTP requests
+- AsyncStorage for session persistence
+- date-fns for date handling
+
+## App Structure
+
+### Screens & Navigation
+
+**Bottom Tab Navigator:**
+1. Leads (home)
+2. Kanban (funil de vendas)
+3. Agenda
+4. Catálogo
+5. Relatórios
+
+---
+
+### 1. Lead Registration Screen
+Form to register a new client/lead with these fields:
+- Nome* (required)
+- Telefone* (required, with WhatsApp mask: +55 (XX) XXXXX-XXXX)
+- CPF/CNPJ (optional)
+- E-mail (optional)
+- Origem do lead (dropdown: Instagram, Indicação, Tráfego pago, Rua, Outro)
+- Localização (optional text field)
+- Observações (free text area)
+- Venda recorrente toggle (yes/no, links to catalog later)
+
+Design rules: large touch targets (min 48px), minimal required fields, one-thumb usability. Show a WhatsApp button on every lead card after creation.
+
+---
+
+### 2. Leads List Screen
+- Searchable list of all leads
+- Each card shows: Name, phone, origin tag, last interaction date, current funnel stage as colored badge
+- FAB (floating action button) to add new lead
+- Tap lead → lead detail screen with full info + action buttons (WhatsApp, Call, Add Task)
+
+---
+
+### 3. Kanban Screen (Visual Sales Funnel)
+Horizontal scrollable Kanban board with these default columns:
+- Novo Lead
+- Em Contato
+- Proposta Enviada
+- Em Negociação
+- Fechado ✅
+- Perdido ❌
+
+Features:
+- Drag-and-drop cards between columns using React Native Reanimated
+- When moving to "Perdido", show a modal asking for the reason (optional field)
+- Column header shows count of leads
+- Lost leads section: tappable badge that navigates to a filtered "Perdidos" list screen with reasons
+
+---
+
+### 4. Tasks & Agenda Screen
+- Calendar view (weekly/monthly toggle)
+- Task list grouped by date
+- Each task linked to a lead (show lead name)
+- Task types: Ligação, Visita, Reunião, Retornar proposta, Outro
+- Local push notifications for task reminders (use Expo Notifications)
+- Quick-add task with: title, date/time, linked lead (searchable), type, notes
+
+---
+
+### 5. Catalog Screen
+- Categories (user can create custom categories)
+- Products per category with: name, price, optional duration/expiry
+- When a product has duration, app sends a local notification when it's about to expire/end for the linked client
+- Link a catalog product to a lead for "venda recorrente"
+
+---
+
+### 6. Reports Screen
+Simple dashboard with:
+- Total leads this month
+- Total closed (won)
+- Conversion rate (%)
+- Revenue in the period (sum of closed deals)
+- Bar chart: leads per week (use Victory Native or react-native-gifted-charts)
+- Pie chart: leads by origin
+- Lost leads list with reasons
+- Date range filter (this week / this month / custom)
+
+---
+
+### Global Features
+- WhatsApp integration: every lead has a "Chamar no WhatsApp" button that opens `https://wa.me/55PHONE` in the device
+- Auth: simple JWT-based login with email/password, persist token in AsyncStorage
+- Offline-friendly: queue failed requests and retry when back online
+- Loading states and skeleton screens on all lists
+- Empty states with friendly illustrations and CTAs
+
+---
+
+### API Base URL
+Use an environment variable: `EXPO_PUBLIC_API_URL=http://localhost:3000`
+All API calls go to this base URL. Create an Axios instance with JWT interceptor.
+
+---
+
+### Folder Structure
+```
+src/
+  api/           # axios instance + all API call functions
+  components/    # reusable UI components
+  screens/       # one folder per screen
+  navigation/    # navigators
+  store/         # zustand stores
+  hooks/         # custom hooks
+  types/         # TypeScript interfaces matching API schemas
+  utils/         # helpers (formatPhone, formatCurrency, etc.)
+```
+```

@@ -42,10 +42,9 @@ export default function TabLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{ href: null }}
-      />
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="relatorios" options={{ href: null }} />
+
       <Tabs.Screen
         name="home"
         options={{
@@ -82,10 +81,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="relatorios"
+        name="financeiro"
         options={{
-          title: "Relatórios",
-          tabBarIcon: ({ color }) => <Feather name="bar-chart-2" size={22} color={color} />,
+          title: "Financeiro",
+          tabBarIcon: ({ color }) => <Feather name="dollar-sign" size={22} color={color} />,
         }}
       />
     </Tabs>

@@ -12,12 +12,14 @@ import {
   FunnelStage,
   Lead,
   Task,
+  Transaction,
 } from "@/types";
 
 const LEADS_KEY = "@converso_leads";
 const TASKS_KEY = "@converso_tasks";
 const CATEGORIES_KEY = "@converso_categories";
 const PRODUCTS_KEY = "@converso_products";
+const TRANSACTIONS_KEY = "@converso_transactions";
 
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -28,6 +30,7 @@ interface AppContextType {
   tasks: Task[];
   categories: CatalogCategory[];
   products: CatalogProduct[];
+  transactions: Transaction[];
   loading: boolean;
   addLead: (lead: Omit<Lead, "id" | "createdAt" | "updatedAt">) => Promise<Lead>;
   updateLead: (id: string, updates: Partial<Lead>) => Promise<void>;
@@ -42,6 +45,8 @@ interface AppContextType {
   addProduct: (product: Omit<CatalogProduct, "id" | "createdAt">) => Promise<CatalogProduct>;
   updateProduct: (id: string, updates: Partial<CatalogProduct>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
+  addTransaction: (tx: Omit<Transaction, "id" | "createdAt">) => Promise<Transaction>;
+  deleteTransaction: (id: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -51,6 +56,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,16 +65,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   async function loadAll() {
     try {
-      const [l, t, c, p] = await Promise.all([
+      const [l, t, c, p, tx] = await Promise.all([
         AsyncStorage.getItem(LEADS_KEY),
         AsyncStorage.getItem(TASKS_KEY),
         AsyncStorage.getItem(CATEGORIES_KEY),
         AsyncStorage.getItem(PRODUCTS_KEY),
+        AsyncStorage.getItem(TRANSACTIONS_KEY),
       ]);
       if (l) setLeads(JSON.parse(l));
       if (t) setTasks(JSON.parse(t));
       if (c) setCategories(JSON.parse(c));
       if (p) setProducts(JSON.parse(p));
+      if (tx) setTransactions(JSON.parse(tx));
     } catch (e) {
       // ignore
     } finally {
@@ -94,6 +102,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const saveProducts = useCallback(async (updated: CatalogProduct[]) => {
     setProducts(updated);
     await AsyncStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated));
+  }, []);
+
+  const saveTransactions = useCallback(async (updated: Transaction[]) => {
+    setTransactions(updated);
+    await AsyncStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(updated));
   }, []);
 
   const addLead = useCallback(async (lead: Omit<Lead, "id" | "createdAt" | "updatedAt">) => {
@@ -167,6 +180,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveProducts(products.filter((p) => p.id !== id));
   }, [products, saveProducts]);
 
+  const addTransaction = useCallback(async (tx: Omit<Transaction, "id" | "createdAt">) => {
+    const newTx: Transaction = { ...tx, id: generateId(), createdAt: new Date().toISOString() };
+    const updated = [newTx, ...transactions];
+    await saveTransactions(updated);
+    return newTx;
+  }, [transactions, saveTransactions]);
+
+  const deleteTransaction = useCallback(async (id: string) => {
+    await saveTransactions(transactions.filter((t) => t.id !== id));
+  }, [transactions, saveTransactions]);
+
   return (
     <AppContext.Provider
       value={{
@@ -174,6 +198,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         tasks,
         categories,
         products,
+        transactions,
         loading,
         addLead,
         updateLead,
@@ -188,6 +213,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addProduct,
         updateProduct,
         deleteProduct,
+        addTransaction,
+        deleteTransaction,
       }}
     >
       {children}

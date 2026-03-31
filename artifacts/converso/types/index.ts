@@ -80,3 +80,18 @@ export const TASK_TYPES: TaskType[] = [
   "Retornar proposta",
   "Outro",
 ];
+
+export type TransactionType = "entrada" | "saida";
+
+export interface Transaction {
+  id: string;
+  type: TransactionType;
+  value: number;
+  description: string;
+  category: string;
+  date: string;
+  createdAt: string;
+}
+
+export const ENTRADA_CATEGORIES = ["Serviço", "Produto", "Venda", "Comissão", "Outro"];
+export const SAIDA_CATEGORIES = ["Aluguel", "Marketing", "Material", "Imposto", "Pessoal", "Software", "Outro"];

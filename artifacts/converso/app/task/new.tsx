@@ -19,13 +19,15 @@ import { TaskType, TASK_TYPES } from "@/types";
 
 export default function NewTaskScreen() {
   const { addTask, leads } = useApp();
-  const params = useLocalSearchParams<{ leadId?: string; leadName?: string }>();
+  const params = useLocalSearchParams<{ leadId?: string; leadName?: string; date?: string }>();
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const now = new Date();
-  const defaultDate = new Date(now.getTime() + 60 * 60 * 1000);
+  const defaultDate = params.date
+    ? new Date(`${params.date}T09:00:00`)
+    : new Date(now.getTime() + 60 * 60 * 1000);
   const defaultDateStr = defaultDate.toISOString().slice(0, 16).replace("T", " ");
 
   const [form, setForm] = useState({

@@ -15,13 +15,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
-import { Transaction, TransactionType, ENTRADA_CATEGORIES, SAIDA_CATEGORIES } from "@/types";
+import { Transaction, TransactionType } from "@/types";
 import { formatCurrency } from "@/utils";
 
-const MONTHS = [
-  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-  "Jul", "Ago", "Set", "Out", "Nov", "Dez",
-];
 const MONTHS_FULL = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
@@ -136,8 +132,6 @@ export default function FinanceiroScreen() {
       ]
     );
   }
-
-  const categories = form.type === "entrada" ? ENTRADA_CATEGORIES : SAIDA_CATEGORIES;
 
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
@@ -313,7 +307,7 @@ export default function FinanceiroScreen() {
             <View style={[styles.valueWrap, { borderColor: form.type === "entrada" ? c.success : c.danger }]}>
               <Text style={[styles.valueCurrency, { color: form.type === "entrada" ? c.success : c.danger }]}>R$</Text>
               <TextInput
-                style={[styles.valueInput, { color: form.type === "entrada" ? c.success : c.danger }]}
+                style={[styles.valueInput, { color: form.type === "entrada" ? c.success : c.danger }, Platform.OS === "web" && ({ outlineStyle: "none" } as any)]}
                 placeholder="0,00"
                 placeholderTextColor={c.textMuted}
                 value={form.value}
@@ -327,7 +321,7 @@ export default function FinanceiroScreen() {
             <View style={[styles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
               <Text style={[styles.inputLabel, { color: c.textSecondary }]}>Descrição *</Text>
               <TextInput
-                style={[styles.inputField, { color: c.text }]}
+                style={[styles.inputField, { color: c.text }, Platform.OS === "web" && ({ outlineStyle: "none" } as any)]}
                 placeholder="Ex: Pagamento cliente, Aluguel..."
                 placeholderTextColor={c.textMuted}
                 value={form.description}
@@ -336,36 +330,22 @@ export default function FinanceiroScreen() {
             </View>
 
             {/* Category */}
-            <Text style={[styles.sectionLabel, { color: c.textSecondary }]}>Categoria</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
-              {categories.map(cat => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[
-                    styles.catChip,
-                    { borderColor: c.border, backgroundColor: c.background },
-                    form.category === cat && {
-                      backgroundColor: form.type === "entrada" ? c.success : c.danger,
-                      borderColor: form.type === "entrada" ? c.success : c.danger,
-                    },
-                  ]}
-                  onPress={() => setForm(f => ({ ...f, category: cat }))}
-                >
-                  <Text style={[
-                    styles.catChipText,
-                    { color: form.category === cat ? "#fff" : c.textSecondary },
-                  ]}>
-                    {cat}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            <View style={[styles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
+              <Text style={[styles.inputLabel, { color: c.textSecondary }]}>Categoria</Text>
+              <TextInput
+                style={[styles.inputField, { color: c.text }, Platform.OS === "web" && ({ outlineStyle: "none" } as any)]}
+                placeholder="Ex: Serviço, Aluguel, Material..."
+                placeholderTextColor={c.textMuted}
+                value={form.category}
+                onChangeText={v => setForm(f => ({ ...f, category: v }))}
+              />
+            </View>
 
             {/* Date */}
             <View style={[styles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
               <Text style={[styles.inputLabel, { color: c.textSecondary }]}>Data</Text>
               <TextInput
-                style={[styles.inputField, { color: c.text }]}
+                style={[styles.inputField, { color: c.text }, Platform.OS === "web" && ({ outlineStyle: "none" } as any)]}
                 placeholder="AAAA-MM-DD"
                 placeholderTextColor={c.textMuted}
                 value={form.date}
@@ -564,18 +544,6 @@ const styles = StyleSheet.create({
   },
   valueCurrency: { fontSize: 22, fontWeight: "700", fontFamily: "Inter_700Bold" },
   valueInput: { flex: 1, fontSize: 28, fontWeight: "700", fontFamily: "Inter_700Bold" },
-
-  sectionLabel: { fontSize: 12, fontWeight: "600", fontFamily: "Inter_600SemiBold", textTransform: "uppercase", letterSpacing: 0.5 },
-
-  catScroll: { marginHorizontal: -4 },
-  catChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    marginHorizontal: 4,
-  },
-  catChipText: { fontSize: 13, fontFamily: "Inter_500Medium" },
 
   inputWrap: {
     borderWidth: 1,

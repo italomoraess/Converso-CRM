@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -28,22 +27,24 @@ export default function RegisterScreen() {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function handleRegister() {
+    setErrorMsg(null);
     if (!email.trim() || !password) {
-      Alert.alert("Atenção", "Email e senha são obrigatórios.");
+      setErrorMsg("Email e senha são obrigatórios.");
       return;
     }
     if (password.length < 8) {
-      Alert.alert("Atenção", "A senha deve ter no mínimo 8 caracteres.");
+      setErrorMsg("A senha deve ter no mínimo 8 caracteres.");
       return;
     }
     if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      Alert.alert("Atenção", "A senha deve ter pelo menos 1 letra maiúscula e 1 número.");
+      setErrorMsg("A senha deve ter pelo menos 1 letra maiúscula e 1 número.");
       return;
     }
     if (password !== confirmPass) {
-      Alert.alert("Atenção", "As senhas não coincidem.");
+      setErrorMsg("As senhas não coincidem.");
       return;
     }
 
@@ -52,7 +53,7 @@ export default function RegisterScreen() {
       await register(email.trim().toLowerCase(), password, name.trim() || undefined);
       router.replace("/(tabs)/home");
     } catch (e: any) {
-      Alert.alert("Erro ao criar conta", e.message ?? "Tente novamente.");
+      setErrorMsg(e.message ?? "Erro ao criar conta. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -162,6 +163,14 @@ export default function RegisterScreen() {
               <Text style={[styles.hint, { color: c.danger }]}>As senhas não coincidem</Text>
             )}
           </View>
+
+          {/* Error banner */}
+          {errorMsg ? (
+            <View style={[styles.errorBanner, { backgroundColor: "#fee2e2", borderColor: "#fca5a5" }]}>
+              <Feather name="alert-circle" size={14} color="#dc2626" />
+              <Text style={styles.errorText}>{errorMsg}</Text>
+            </View>
+          ) : null}
 
           {/* Register Button */}
           <TouchableOpacity
@@ -282,4 +291,14 @@ const styles = StyleSheet.create({
   },
   footerText: { fontSize: 14, fontFamily: "Inter_400Regular" },
   footerLink: { fontSize: 14, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorText: { flex: 1, fontSize: 13, color: "#dc2626", fontFamily: "Inter_400Regular" },
 });

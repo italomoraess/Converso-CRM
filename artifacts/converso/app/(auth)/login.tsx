@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -25,10 +24,12 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function handleLogin() {
+    setErrorMsg(null);
     if (!email.trim() || !password) {
-      Alert.alert("Atenção", "Preencha email e senha.");
+      setErrorMsg("Preencha email e senha.");
       return;
     }
     setLoading(true);
@@ -36,7 +37,7 @@ export default function LoginScreen() {
       await login(email.trim().toLowerCase(), password);
       router.replace("/(tabs)/home");
     } catch (e: any) {
-      Alert.alert("Erro ao entrar", e.message ?? "Verifique suas credenciais.");
+      setErrorMsg(e.message ?? "Verifique suas credenciais e tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -107,6 +108,14 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Error banner */}
+          {errorMsg ? (
+            <View style={[styles.errorBanner, { backgroundColor: "#fee2e2", borderColor: "#fca5a5" }]}>
+              <Feather name="alert-circle" size={14} color="#dc2626" />
+              <Text style={styles.errorText}>{errorMsg}</Text>
+            </View>
+          ) : null}
 
           {/* Login Button */}
           <TouchableOpacity
@@ -203,6 +212,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "Inter_400Regular",
   },
+
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorText: { flex: 1, fontSize: 13, color: "#dc2626", fontFamily: "Inter_400Regular" },
 
   btn: {
     flexDirection: "row",

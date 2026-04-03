@@ -7,6 +7,19 @@ out-tsc
 *.tsbuildinfo
 .expo
 .expo-shared
+web-build/
+static-build/
+expo-env.d.ts
+.metro-health-check*
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.env
+.env*.local
+.vercel
 
 # dependencies
 node_modules

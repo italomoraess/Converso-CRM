@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "Converso CRM"
+version = "1.0.0"
+id = "converso"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 23523
+
+[services.development]
+run = "pnpm run dev"
+
+[services.production]
+build = [ "pnpm", "run", "build" ]
+run = [ "pnpm", "run", "serve" ]
+
+[services.env]
+PORT = "23523"
+BASE_PATH = "/"

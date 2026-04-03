@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, useThemeMode } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Lead, Task } from "@/types";
 import {
   getOriginBadgeStyle,
@@ -187,7 +188,15 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const { theme, toggleTheme } = useThemeMode();
+  const { user } = useAuth();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+
+  const avatarInitials = (user?.name ?? user?.email ?? "?")
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
   const today = todayISO();
 
   const thisMonthLeads = useMemo(() => {
@@ -224,9 +233,18 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={[styles.headerWrap, { paddingTop: topPad, backgroundColor: c.tint }]}>
         <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.greetText}>{greeting()} 👋</Text>
-            <Text style={styles.dateText}>{dateStr}</Text>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.userAvatar}
+              onPress={() => router.push("/perfil")}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.userAvatarText}>{avatarInitials}</Text>
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.greetText}>{greeting()} 👋</Text>
+              <Text style={styles.dateText}>{dateStr}</Text>
+            </View>
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity
@@ -415,10 +433,32 @@ const styles = StyleSheet.create({
   headerWrap: { paddingBottom: 20 },
   headerContent: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingTop: 12,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  userAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.5)",
+  },
+  userAvatarText: {
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    color: "#fff",
   },
   greetText: {
     fontSize: 22,

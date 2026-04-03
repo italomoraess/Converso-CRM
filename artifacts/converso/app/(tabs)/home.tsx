@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme, useThemeMode } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Lead, Task } from "@/types";
@@ -187,7 +187,6 @@ export default function HomeScreen() {
   const { leads, tasks } = useApp();
   const insets = useSafeAreaInsets();
   const c = useTheme();
-  const { theme, toggleTheme } = useThemeMode();
   const { user } = useAuth();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
@@ -223,11 +222,6 @@ export default function HomeScreen() {
   const now = new Date();
   const dateStr = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
 
-  async function handleToggleTheme() {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    toggleTheme();
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
@@ -245,25 +239,6 @@ export default function HomeScreen() {
               <Text style={styles.greetText}>{greeting()} 👋</Text>
               <Text style={styles.dateText}>{dateStr}</Text>
             </View>
-          </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.headerBtn}
-              onPress={handleToggleTheme}
-            >
-              <Feather name={theme === "dark" ? "sun" : "moon"} size={20} color="rgba(255,255,255,0.85)" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerBtn}
-              onPress={() => router.push("/agenda")}
-            >
-              <Feather name="bell" size={20} color="rgba(255,255,255,0.85)" />
-              {todayTasks.length > 0 && (
-                <View style={styles.notifBadge}>
-                  <Text style={styles.notifBadgeText}>{todayTasks.length}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -473,22 +448,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textTransform: "capitalize",
   },
-  headerActions: { flexDirection: "row", gap: 8, alignItems: "center" },
-  headerBtn: { position: "relative", padding: 6 },
-  notifBadge: {
-    position: "absolute",
-    top: 2,
-    right: 2,
-    backgroundColor: "#ef4444",
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 3,
-  },
-  notifBadgeText: { color: "#fff", fontSize: 9, fontWeight: "700" },
-
   scroll: { padding: 16, gap: 20 },
 
   statsGrid: {

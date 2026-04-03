@@ -18,6 +18,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { FunnelStage, LeadOrigin, LEAD_ORIGINS } from "@/types";
 import { formatPhone } from "@/utils";
+import { SaveButton } from "@/components/SaveButton";
 
 export default function NewLeadScreen() {
   const { addLead } = useApp();
@@ -79,14 +80,11 @@ export default function NewLeadScreen() {
           <Feather name="x" size={24} color={c.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: c.text }]}>Novo Lead</Text>
-        <TouchableOpacity
-          style={[styles.saveBtn, { backgroundColor: loading ? c.border : c.tint }]}
+        <SaveButton
           onPress={handleSave}
-          disabled={loading}
+          loading={loading}
           testID="save-lead-btn"
-        >
-          <Text style={styles.saveBtnText}>{loading ? "..." : "Salvar"}</Text>
-        </TouchableOpacity>
+        />
       </View>
 
       <KeyboardAwareScrollView

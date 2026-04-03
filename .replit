@@ -54,3 +54,6 @@ EXPO_PUBLIC_API_URL = "https://crm-api-production-5c20.up.railway.app"
 
 [userenv.shared]
 EXPO_PUBLIC_API_URL = "https://crm-api-production-5c20.up.railway.app"
+
+[nix]
+channel = "stable-25_05"

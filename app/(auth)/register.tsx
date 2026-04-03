@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { Button } from "@/components/Button";
 
 export default function RegisterScreen() {
   const c = useTheme();
@@ -173,21 +174,14 @@ export default function RegisterScreen() {
           ) : null}
 
           {/* Register Button */}
-          <TouchableOpacity
-            style={[styles.btn, { backgroundColor: loading ? c.textMuted : c.success }]}
+          <Button
+            label="Criar conta"
             onPress={handleRegister}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <Text style={styles.btnText}>Criando conta...</Text>
-            ) : (
-              <>
-                <Text style={styles.btnText}>Criar conta</Text>
-                <Feather name="check" size={18} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
+            loading={loading}
+            icon="check"
+            color={c.success}
+            style={styles.btn}
+          />
         </View>
 
         {/* Login link */}

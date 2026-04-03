@@ -16,6 +16,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { TaskType, TASK_TYPES } from "@/types";
+import { SaveButton } from "@/components/SaveButton";
 
 export default function NewTaskScreen() {
   const { addTask, leads } = useApp();
@@ -76,14 +77,11 @@ export default function NewTaskScreen() {
           <Feather name="x" size={24} color={c.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: c.text }]}>Nova Tarefa</Text>
-        <TouchableOpacity
-          style={[styles.saveBtn, { backgroundColor: loading ? c.border : c.tint }]}
+        <SaveButton
           onPress={handleSave}
-          disabled={loading}
+          loading={loading}
           testID="save-task-btn"
-        >
-          <Text style={styles.saveBtnText}>{loading ? "..." : "Salvar"}</Text>
-        </TouchableOpacity>
+        />
       </View>
 
       <KeyboardAwareScrollView

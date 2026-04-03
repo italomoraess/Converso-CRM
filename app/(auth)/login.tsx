@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { Button } from "@/components/Button";
 
 export default function LoginScreen() {
   const c = useTheme();
@@ -118,21 +119,13 @@ export default function LoginScreen() {
           ) : null}
 
           {/* Login Button */}
-          <TouchableOpacity
-            style={[styles.btn, { backgroundColor: loading ? c.textMuted : c.tint }]}
+          <Button
+            label="Entrar"
             onPress={handleLogin}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <Text style={styles.btnText}>Entrando...</Text>
-            ) : (
-              <>
-                <Text style={styles.btnText}>Entrar</Text>
-                <Feather name="arrow-right" size={18} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
+            loading={loading}
+            icon="arrow-right"
+            style={styles.btn}
+          />
         </View>
 
         {/* Register link */}

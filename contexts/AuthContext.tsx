@@ -1,15 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, USER_KEY } from "@/services/api";
+import * as authService from "@/services/auth/auth.service";
+import type { AuthUser } from "@/services/auth/auth.types";
+import {
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  USER_KEY,
+} from "@/services/http/config";
 
-const BASE_URL = () => process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  name?: string;
-  plan?: string;
-}
+export type { AuthUser };
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -40,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(JSON.parse(userStr));
       }
     } catch {
-      // ignore
+      /* ignore */
     } finally {
       setLoading(false);
     }
@@ -59,49 +58,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function login(email: string, password: string) {
-    const res = await fetch(`${BASE_URL()}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      throw new Error(
-        typeof json.message === "string"
-          ? json.message
-          : Array.isArray(json.message)
-          ? json.message[0]
-          : "Email ou senha incorretos"
-      );
-    }
+    const session = await authService.login(email, password);
     await persistSession(
-      { accessToken: json.data.accessToken, refreshToken: json.data.refreshToken },
-      json.data.user
+      { accessToken: session.accessToken, refreshToken: session.refreshToken },
+      session.user
     );
   }
 
   async function register(email: string, password: string, name?: string) {
-    const body: Record<string, string> = { email, password };
-    if (name?.trim()) body.name = name.trim();
-
-    const res = await fetch(`${BASE_URL()}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      throw new Error(
-        typeof json.message === "string"
-          ? json.message
-          : Array.isArray(json.message)
-          ? json.message[0]
-          : "Erro ao criar conta"
-      );
-    }
+    const session = await authService.register(email, password, name);
     await persistSession(
-      { accessToken: json.data.accessToken, refreshToken: json.data.refreshToken },
-      json.data.user
+      { accessToken: session.accessToken, refreshToken: session.refreshToken },
+      session.user
     );
   }
 
@@ -112,17 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         AsyncStorage.getItem(REFRESH_TOKEN_KEY),
       ]);
       if (token && refreshToken) {
-        await fetch(`${BASE_URL()}/auth/logout`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ refreshToken }),
-        });
+        await authService.logout(token, refreshToken);
       }
     } catch {
-      // ignore logout api errors
+      /* ignore */
     } finally {
       await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, USER_KEY]);
       setUser(null);

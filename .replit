@@ -43,6 +43,10 @@ timeoutMs = 20000
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 23523
+externalPort = 3000
+
 [userenv]
 EXPO_PUBLIC_API_URL = "https://crm-api-production-5c20.up.railway.app"
 

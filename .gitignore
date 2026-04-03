@@ -9,7 +9,6 @@ out-tsc
 .expo-shared
 web-build/
 static-build/
-expo-env.d.ts
 .metro-health-check*
 *.orig.*
 *.jks

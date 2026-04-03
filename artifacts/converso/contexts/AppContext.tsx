@@ -11,19 +11,225 @@ import {
   CatalogProduct,
   FunnelStage,
   Lead,
+  LeadOrigin,
   Task,
+  TaskType,
   Transaction,
+  TransactionType,
 } from "@/types";
+import { apiFetch, ACCESS_TOKEN_KEY } from "@/services/api";
 
-const LEADS_KEY = "@converso_leads";
-const TASKS_KEY = "@converso_tasks";
-const CATEGORIES_KEY = "@converso_categories";
-const PRODUCTS_KEY = "@converso_products";
-const TRANSACTIONS_KEY = "@converso_transactions";
+// ─── Mappers ────────────────────────────────────────────────────────────────
 
-function generateId() {
-  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+const stageToApi: Record<FunnelStage, string> = {
+  "Novo Lead": "novo",
+  "Em Contato": "contatado",
+  "Proposta Enviada": "negociando",
+  "Em Negociação": "negociando",
+  "Fechado": "fechado",
+  "Perdido": "perdido",
+};
+
+const stageFromApi: Record<string, FunnelStage> = {
+  novo: "Novo Lead",
+  contatado: "Em Contato",
+  negociando: "Em Negociação",
+  fechado: "Fechado",
+  perdido: "Perdido",
+};
+
+const originToApi: Record<LeadOrigin, string> = {
+  Instagram: "instagram",
+  "Indicação": "indicacao",
+  Facebook: "facebook",
+  WhatsApp: "whatsapp",
+  Site: "site",
+  Telefone: "telefone",
+  "Tráfego pago": "outro",
+  Rua: "outro",
+  Outro: "outro",
+};
+
+const originFromApi: Record<string, LeadOrigin> = {
+  instagram: "Instagram",
+  indicacao: "Indicação",
+  facebook: "Facebook",
+  whatsapp: "WhatsApp",
+  site: "Site",
+  telefone: "Telefone",
+  outro: "Outro",
+};
+
+const taskTypeToApi: Record<TaskType, string> = {
+  "Ligação": "ligacao",
+  Visita: "visita",
+  "Reunião": "reuniao",
+  "Retornar proposta": "retorno",
+  Outro: "outro",
+};
+
+const taskTypeFromApi: Record<string, TaskType> = {
+  ligacao: "Ligação",
+  visita: "Visita",
+  reuniao: "Reunião",
+  retorno: "Retornar proposta",
+  outro: "Outro",
+};
+
+// API shapes
+interface ApiLead {
+  id: string;
+  name: string;
+  phone: string;
+  cpfCnpj?: string;
+  email?: string;
+  origin: string;
+  location?: string;
+  observations?: string;
+  recurringSale: boolean;
+  funnelStage: string;
+  dealValue?: string;
+  lostReason?: string;
+  createdAt: string;
+  updatedAt: string;
 }
+
+interface ApiAppointment {
+  id: string;
+  title: string;
+  type: string;
+  date: string;
+  startTime?: string;
+  endTime?: string;
+  allDay?: boolean;
+  leadId?: string;
+  description?: string;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lead?: { id: string; name: string; phone: string };
+}
+
+interface ApiCategory {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+interface ApiProduct {
+  id: string;
+  categoryId: string;
+  name: string;
+  price: string;
+  durationDays?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ApiFinanceCategory {
+  id: string;
+  name: string;
+  type: TransactionType;
+  color?: string;
+  createdAt: string;
+}
+
+interface ApiTransaction {
+  id: string;
+  categoryId: string;
+  type: TransactionType;
+  amount: string;
+  description?: string;
+  date: string;
+  createdAt: string;
+  category?: ApiFinanceCategory;
+}
+
+function apiLeadToLocal(a: ApiLead): Lead {
+  return {
+    id: a.id,
+    nome: a.name,
+    telefone: a.phone,
+    cpfCnpj: a.cpfCnpj,
+    email: a.email,
+    origem: originFromApi[a.origin] ?? "Outro",
+    localizacao: a.location,
+    observacoes: a.observations,
+    vendaRecorrente: a.recurringSale,
+    stage: stageFromApi[a.funnelStage] ?? "Novo Lead",
+    motivoPerdido: a.lostReason ?? undefined,
+    dealValue: a.dealValue ? parseFloat(a.dealValue) : undefined,
+    createdAt: a.createdAt,
+    updatedAt: a.updatedAt,
+  };
+}
+
+function localLeadToApi(lead: Partial<Omit<Lead, "id" | "createdAt" | "updatedAt">>) {
+  const body: Record<string, unknown> = {};
+  if (lead.nome !== undefined) body.name = lead.nome;
+  if (lead.telefone !== undefined) body.phone = lead.telefone;
+  if (lead.cpfCnpj !== undefined) body.cpfCnpj = lead.cpfCnpj;
+  if (lead.email !== undefined) body.email = lead.email;
+  if (lead.origem !== undefined) body.origin = originToApi[lead.origem] ?? "outro";
+  if (lead.localizacao !== undefined) body.location = lead.localizacao;
+  if (lead.observacoes !== undefined) body.observations = lead.observacoes;
+  if (lead.vendaRecorrente !== undefined) body.recurringSale = lead.vendaRecorrente;
+  if (lead.stage !== undefined) body.funnelStage = stageToApi[lead.stage] ?? "novo";
+  if (lead.motivoPerdido !== undefined) body.lostReason = lead.motivoPerdido;
+  if ((lead as any).dealValue !== undefined) body.dealValue = (lead as any).dealValue;
+  return body;
+}
+
+function apiApptToLocal(a: ApiAppointment): Task {
+  return {
+    id: a.id,
+    title: a.title,
+    type: taskTypeFromApi[a.type] ?? "Outro",
+    date: a.date.slice(0, 10),
+    leadId: a.leadId,
+    leadName: a.lead?.name,
+    notes: a.description,
+    completed: a.completed,
+    createdAt: a.createdAt,
+  };
+}
+
+function localTaskToApi(task: Partial<Omit<Task, "id" | "createdAt">>) {
+  const body: Record<string, unknown> = {};
+  if (task.title !== undefined) body.title = task.title;
+  if (task.type !== undefined) body.type = taskTypeToApi[task.type] ?? "outro";
+  if (task.date !== undefined) body.date = task.date;
+  if (task.leadId !== undefined) body.leadId = task.leadId;
+  if (task.notes !== undefined) body.description = task.notes;
+  return body;
+}
+
+function apiProductToLocal(p: ApiProduct): CatalogProduct {
+  return {
+    id: p.id,
+    categoryId: p.categoryId,
+    name: p.name,
+    price: parseFloat(p.price),
+    duration: p.durationDays,
+    durationUnit: p.durationDays ? "dias" : undefined,
+    createdAt: p.createdAt,
+  };
+}
+
+function apiTxToLocal(t: ApiTransaction): Transaction {
+  return {
+    id: t.id,
+    type: t.type,
+    value: parseFloat(t.amount),
+    description: t.description ?? "",
+    category: t.category?.name ?? t.categoryId,
+    categoryId: t.categoryId,
+    date: t.date.slice(0, 10),
+    createdAt: t.createdAt,
+  };
+}
+
+// ─── Context ─────────────────────────────────────────────────────────────────
 
 interface AppContextType {
   leads: Lead[];
@@ -32,6 +238,7 @@ interface AppContextType {
   products: CatalogProduct[];
   transactions: Transaction[];
   loading: boolean;
+  refreshAll: () => Promise<void>;
   addLead: (lead: Omit<Lead, "id" | "createdAt" | "updatedAt">) => Promise<Lead>;
   updateLead: (id: string, updates: Partial<Lead>) => Promise<void>;
   deleteLead: (id: string) => Promise<void>;
@@ -57,6 +264,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [financeCategories, setFinanceCategories] = useState<ApiFinanceCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,132 +272,199 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function loadAll() {
+    const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!token) { setLoading(false); return; }
+
     try {
-      const [l, t, c, p, tx] = await Promise.all([
-        AsyncStorage.getItem(LEADS_KEY),
-        AsyncStorage.getItem(TASKS_KEY),
-        AsyncStorage.getItem(CATEGORIES_KEY),
-        AsyncStorage.getItem(PRODUCTS_KEY),
-        AsyncStorage.getItem(TRANSACTIONS_KEY),
+      const [leadsData, apptData, catData, prodData, txData, finCatData] = await Promise.all([
+        apiFetch<ApiLead[]>("/leads").catch(() => [] as ApiLead[]),
+        apiFetch<ApiAppointment[]>("/appointments").catch(() => [] as ApiAppointment[]),
+        apiFetch<ApiCategory[]>("/catalog/categories").catch(() => [] as ApiCategory[]),
+        apiFetch<ApiProduct[]>("/catalog/products").catch(() => [] as ApiProduct[]),
+        apiFetch<ApiTransaction[]>("/finance/transactions").catch(() => [] as ApiTransaction[]),
+        apiFetch<ApiFinanceCategory[]>("/finance/categories").catch(() => [] as ApiFinanceCategory[]),
       ]);
-      if (l) setLeads(JSON.parse(l));
-      if (t) setTasks(JSON.parse(t));
-      if (c) setCategories(JSON.parse(c));
-      if (p) setProducts(JSON.parse(p));
-      if (tx) setTransactions(JSON.parse(tx));
-    } catch (e) {
-      // ignore
+      setLeads(leadsData.map(apiLeadToLocal));
+      setTasks(apptData.map(apiApptToLocal));
+      setCategories(catData.map(c => ({ id: c.id, name: c.name, createdAt: c.createdAt })));
+      setProducts(prodData.map(apiProductToLocal));
+      setTransactions(txData.map(apiTxToLocal));
+      setFinanceCategories(finCatData);
+    } catch {
+      // Errors (including 401 redirect) handled by apiFetch
     } finally {
       setLoading(false);
     }
   }
 
-  const saveLeads = useCallback(async (updated: Lead[]) => {
-    setLeads(updated);
-    await AsyncStorage.setItem(LEADS_KEY, JSON.stringify(updated));
+  const refreshAll = useCallback(async () => {
+    setLoading(true);
+    await loadAll();
   }, []);
 
-  const saveTasks = useCallback(async (updated: Task[]) => {
-    setTasks(updated);
-    await AsyncStorage.setItem(TASKS_KEY, JSON.stringify(updated));
-  }, []);
+  // ── Finance category helpers ───────────────────────────────────────────────
 
-  const saveCategories = useCallback(async (updated: CatalogCategory[]) => {
-    setCategories(updated);
-    await AsyncStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
-  }, []);
+  async function getOrCreateFinanceCategory(name: string, type: TransactionType): Promise<string> {
+    const existing = financeCategories.find(
+      c => c.name.toLowerCase() === name.toLowerCase() && c.type === type
+    );
+    if (existing) return existing.id;
 
-  const saveProducts = useCallback(async (updated: CatalogProduct[]) => {
-    setProducts(updated);
-    await AsyncStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated));
-  }, []);
+    const created = await apiFetch<ApiFinanceCategory>("/finance/categories", {
+      method: "POST",
+      body: JSON.stringify({ name, type }),
+    });
+    setFinanceCategories(prev => [...prev, created]);
+    return created.id;
+  }
 
-  const saveTransactions = useCallback(async (updated: Transaction[]) => {
-    setTransactions(updated);
-    await AsyncStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(updated));
-  }, []);
+  // ── Leads ──────────────────────────────────────────────────────────────────
 
   const addLead = useCallback(async (lead: Omit<Lead, "id" | "createdAt" | "updatedAt">) => {
-    const now = new Date().toISOString();
-    const newLead: Lead = { ...lead, id: generateId(), createdAt: now, updatedAt: now };
-    const updated = [newLead, ...leads];
-    await saveLeads(updated);
-    return newLead;
-  }, [leads, saveLeads]);
+    const created = await apiFetch<ApiLead>("/leads", {
+      method: "POST",
+      body: JSON.stringify(localLeadToApi(lead)),
+    });
+    const local = apiLeadToLocal(created);
+    setLeads(prev => [local, ...prev]);
+    return local;
+  }, []);
 
   const updateLead = useCallback(async (id: string, updates: Partial<Lead>) => {
-    const updated = leads.map((l) =>
-      l.id === id ? { ...l, ...updates, updatedAt: new Date().toISOString() } : l
-    );
-    await saveLeads(updated);
-  }, [leads, saveLeads]);
+    const updated = await apiFetch<ApiLead>(`/leads/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(localLeadToApi(updates)),
+    });
+    setLeads(prev => prev.map(l => (l.id === id ? apiLeadToLocal(updated) : l)));
+  }, []);
 
   const deleteLead = useCallback(async (id: string) => {
-    await saveLeads(leads.filter((l) => l.id !== id));
-  }, [leads, saveLeads]);
+    await apiFetch(`/leads/${id}`, { method: "DELETE" });
+    setLeads(prev => prev.filter(l => l.id !== id));
+  }, []);
 
   const updateLeadStage = useCallback(async (id: string, stage: FunnelStage, motivoPerdido?: string) => {
-    const updated = leads.map((l) =>
-      l.id === id
-        ? { ...l, stage, motivoPerdido: stage === "Perdido" ? motivoPerdido : undefined, updatedAt: new Date().toISOString() }
-        : l
-    );
-    await saveLeads(updated);
-  }, [leads, saveLeads]);
+    const body: Record<string, unknown> = { funnelStage: stageToApi[stage] ?? "novo" };
+    if (stage === "Perdido" && motivoPerdido) body.lostReason = motivoPerdido;
+
+    const updated = await apiFetch<ApiLead>(`/leads/${id}/stage`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+    setLeads(prev => prev.map(l => (l.id === id ? apiLeadToLocal(updated) : l)));
+  }, []);
+
+  // ── Tasks (Appointments) ──────────────────────────────────────────────────
 
   const addTask = useCallback(async (task: Omit<Task, "id" | "createdAt">) => {
-    const newTask: Task = { ...task, id: generateId(), createdAt: new Date().toISOString() };
-    await saveTasks([...tasks, newTask]);
-    return newTask;
-  }, [tasks, saveTasks]);
+    const created = await apiFetch<ApiAppointment>("/appointments", {
+      method: "POST",
+      body: JSON.stringify(localTaskToApi(task)),
+    });
+    const local = apiApptToLocal(created);
+    setTasks(prev => [...prev, local]);
+    return local;
+  }, []);
 
   const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
-    await saveTasks(tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)));
-  }, [tasks, saveTasks]);
+    const updated = await apiFetch<ApiAppointment>(`/appointments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(localTaskToApi(updates)),
+    });
+    setTasks(prev => prev.map(t => (t.id === id ? apiApptToLocal(updated) : t)));
+  }, []);
 
   const deleteTask = useCallback(async (id: string) => {
-    await saveTasks(tasks.filter((t) => t.id !== id));
-  }, [tasks, saveTasks]);
+    await apiFetch(`/appointments/${id}`, { method: "DELETE" });
+    setTasks(prev => prev.filter(t => t.id !== id));
+  }, []);
 
   const toggleTaskComplete = useCallback(async (id: string) => {
-    await saveTasks(tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
-  }, [tasks, saveTasks]);
+    const updated = await apiFetch<ApiAppointment>(`/appointments/${id}/complete`, {
+      method: "PATCH",
+    });
+    setTasks(prev => prev.map(t => (t.id === id ? apiApptToLocal(updated) : t)));
+  }, []);
+
+  // ── Catalog Categories ────────────────────────────────────────────────────
 
   const addCategory = useCallback(async (name: string) => {
-    const cat: CatalogCategory = { id: generateId(), name, createdAt: new Date().toISOString() };
-    await saveCategories([...categories, cat]);
+    const created = await apiFetch<ApiCategory>("/catalog/categories", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
+    const cat: CatalogCategory = { id: created.id, name: created.name, createdAt: created.createdAt };
+    setCategories(prev => [...prev, cat]);
     return cat;
-  }, [categories, saveCategories]);
+  }, []);
 
   const deleteCategory = useCallback(async (id: string) => {
-    await saveCategories(categories.filter((c) => c.id !== id));
-    await saveProducts(products.filter((p) => p.categoryId !== id));
-  }, [categories, products, saveCategories, saveProducts]);
+    await apiFetch(`/catalog/categories/${id}`, { method: "DELETE" });
+    setCategories(prev => prev.filter(c => c.id !== id));
+    setProducts(prev => prev.filter(p => p.categoryId !== id));
+  }, []);
+
+  // ── Catalog Products ──────────────────────────────────────────────────────
 
   const addProduct = useCallback(async (product: Omit<CatalogProduct, "id" | "createdAt">) => {
-    const p: CatalogProduct = { ...product, id: generateId(), createdAt: new Date().toISOString() };
-    await saveProducts([...products, p]);
-    return p;
-  }, [products, saveProducts]);
+    const body: Record<string, unknown> = {
+      categoryId: product.categoryId,
+      name: product.name,
+      price: product.price,
+    };
+    if (product.duration) body.durationDays = product.duration;
+
+    const created = await apiFetch<ApiProduct>("/catalog/products", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    const local = apiProductToLocal(created);
+    setProducts(prev => [...prev, local]);
+    return local;
+  }, []);
 
   const updateProduct = useCallback(async (id: string, updates: Partial<CatalogProduct>) => {
-    await saveProducts(products.map((p) => (p.id === id ? { ...p, ...updates } : p)));
-  }, [products, saveProducts]);
+    const body: Record<string, unknown> = {};
+    if (updates.name !== undefined) body.name = updates.name;
+    if (updates.price !== undefined) body.price = updates.price;
+    if (updates.categoryId !== undefined) body.categoryId = updates.categoryId;
+    if (updates.duration !== undefined) body.durationDays = updates.duration;
+
+    const updated = await apiFetch<ApiProduct>(`/catalog/products/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+    setProducts(prev => prev.map(p => (p.id === id ? apiProductToLocal(updated) : p)));
+  }, []);
 
   const deleteProduct = useCallback(async (id: string) => {
-    await saveProducts(products.filter((p) => p.id !== id));
-  }, [products, saveProducts]);
+    await apiFetch(`/catalog/products/${id}`, { method: "DELETE" });
+    setProducts(prev => prev.filter(p => p.id !== id));
+  }, []);
+
+  // ── Finance Transactions ──────────────────────────────────────────────────
 
   const addTransaction = useCallback(async (tx: Omit<Transaction, "id" | "createdAt">) => {
-    const newTx: Transaction = { ...tx, id: generateId(), createdAt: new Date().toISOString() };
-    const updated = [newTx, ...transactions];
-    await saveTransactions(updated);
-    return newTx;
-  }, [transactions, saveTransactions]);
+    const categoryId = await getOrCreateFinanceCategory(tx.category, tx.type);
+    const created = await apiFetch<ApiTransaction>("/finance/transactions", {
+      method: "POST",
+      body: JSON.stringify({
+        categoryId,
+        type: tx.type,
+        amount: tx.value,
+        description: tx.description || undefined,
+        date: tx.date,
+      }),
+    });
+    const local = apiTxToLocal({ ...created, category: financeCategories.find(c => c.id === created.categoryId) });
+    setTransactions(prev => [local, ...prev]);
+    return local;
+  }, [financeCategories]);
 
   const deleteTransaction = useCallback(async (id: string) => {
-    await saveTransactions(transactions.filter((t) => t.id !== id));
-  }, [transactions, saveTransactions]);
+    await apiFetch(`/finance/transactions/${id}`, { method: "DELETE" });
+    setTransactions(prev => prev.filter(t => t.id !== id));
+  }, []);
 
   return (
     <AppContext.Provider
@@ -200,6 +475,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         products,
         transactions,
         loading,
+        refreshAll,
         addLead,
         updateLead,
         deleteLead,

@@ -7,7 +7,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { Feather } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, router, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
@@ -17,6 +17,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AppProvider } from "@/contexts/AppContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider, useThemeMode } from "@/contexts/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
@@ -25,10 +26,26 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const { theme } = useThemeMode();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (authLoading) return;
+    const inAuthGroup = segments[0] === "(auth)";
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace("/(auth)/login");
+    } else if (isAuthenticated && inAuthGroup) {
+      router.replace("/(tabs)/home");
+    }
+  }, [isAuthenticated, authLoading, segments]);
+
+  if (authLoading) return null;
+
   return (
     <>
       <StatusBar style={theme === "dark" ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="lead/new"
@@ -69,9 +86,11 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
               <ThemeProvider>
-                <AppProvider>
-                  <RootLayoutNav />
-                </AppProvider>
+                <AuthProvider>
+                  <AppProvider>
+                    <RootLayoutNav />
+                  </AppProvider>
+                </AuthProvider>
               </ThemeProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>

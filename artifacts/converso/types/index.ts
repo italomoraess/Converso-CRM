@@ -1,4 +1,13 @@
-export type LeadOrigin = "Instagram" | "Indicação" | "Tráfego pago" | "Rua" | "Outro";
+export type LeadOrigin =
+  | "Instagram"
+  | "Indicação"
+  | "Facebook"
+  | "WhatsApp"
+  | "Site"
+  | "Telefone"
+  | "Tráfego pago"
+  | "Rua"
+  | "Outro";
 
 export type FunnelStage =
   | "Novo Lead"
@@ -22,6 +31,7 @@ export interface Lead {
   vendaRecorrente: boolean;
   stage: FunnelStage;
   motivoPerdido?: string;
+  dealValue?: number;
   catalogProductId?: string;
   createdAt: string;
   updatedAt: string;
@@ -68,6 +78,10 @@ export const FUNNEL_STAGES: FunnelStage[] = [
 export const LEAD_ORIGINS: LeadOrigin[] = [
   "Instagram",
   "Indicação",
+  "Facebook",
+  "WhatsApp",
+  "Site",
+  "Telefone",
   "Tráfego pago",
   "Rua",
   "Outro",
@@ -89,6 +103,7 @@ export interface Transaction {
   value: number;
   description: string;
   category: string;
+  categoryId?: string;
   date: string;
   createdAt: string;
 }

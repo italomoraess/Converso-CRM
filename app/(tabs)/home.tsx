@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SkeletonHome } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -184,7 +185,7 @@ function TodayTaskRow({ task, c }: { task: Task; c: ColorScheme }) {
 }
 
 export default function HomeScreen() {
-  const { leads, tasks } = useApp();
+  const { leads, tasks, loading } = useApp();
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const { user } = useAuth();
@@ -221,6 +222,10 @@ export default function HomeScreen() {
 
   const now = new Date();
   const dateStr = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+
+  if (loading) {
+    return <SkeletonHome c={c} topPad={topPad} />;
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>

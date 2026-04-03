@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SkeletonLeadDetail } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { ColorScheme } from "@/constants/colors";
@@ -21,13 +22,17 @@ import { formatDate, formatDateTime, getKanbanColumnColor, getOriginBadgeStyle, 
 
 export default function LeadDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { leads, deleteLead, updateLeadStage } = useApp();
+  const { leads, deleteLead, updateLeadStage, loading: appLoading } = useApp();
   const lead = leads.find((l) => l.id === id);
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const [stageModal, setStageModal] = useState(false);
+
+  if (appLoading && !lead) {
+    return <SkeletonLeadDetail c={c} topPad={topPad} />;
+  }
 
   if (!lead) {
     return (

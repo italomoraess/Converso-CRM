@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { ButtonSpinner } from "@/components/Spinner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { TaskType, TASK_TYPES } from "@/types";
@@ -82,7 +83,11 @@ export default function NewTaskScreen() {
           disabled={loading}
           testID="save-task-btn"
         >
-          <Text style={styles.saveBtnText}>{loading ? "..." : "Salvar"}</Text>
+          {loading ? (
+            <ButtonSpinner color="#fff" />
+          ) : (
+            <Text style={styles.saveBtnText}>Salvar</Text>
+          )}
         </TouchableOpacity>
       </View>
 

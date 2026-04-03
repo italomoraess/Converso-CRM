@@ -14,13 +14,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/EmptyState";
+import { SkeletonCatalogo } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { CatalogCategory, CatalogProduct } from "@/types";
 import { formatCurrency } from "@/utils";
 
 export default function CatalogoScreen() {
-  const { categories, products, addCategory, deleteCategory, addProduct, deleteProduct } = useApp();
+  const { categories, products, addCategory, deleteCategory, addProduct, deleteProduct, loading } = useApp();
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -73,6 +74,10 @@ export default function CatalogoScreen() {
     });
     setProductModal(null);
     setProdForm({ name: "", price: "", duration: "", durationUnit: "meses", description: "" });
+  }
+
+  if (loading) {
+    return <SkeletonCatalogo c={c} topPad={topPad} />;
   }
 
   return (

@@ -11,16 +11,21 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/EmptyState";
+import { SkeletonListScreen } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { formatDate } from "@/utils";
 
 export default function PerdidosScreen() {
-  const { leads } = useApp();
+  const { leads, loading } = useApp();
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const perdidos = leads.filter((l) => l.stage === "Perdido");
+
+  if (loading) {
+    return <SkeletonListScreen c={c} topPad={topPad} />;
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>

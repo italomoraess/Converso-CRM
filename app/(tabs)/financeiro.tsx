@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SkeletonFinance } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { Transaction, TransactionType } from "@/types";
@@ -41,7 +42,7 @@ interface FormState {
 }
 
 export default function FinanceiroScreen() {
-  const { transactions, addTransaction, deleteTransaction } = useApp();
+  const { transactions, addTransaction, deleteTransaction, loading } = useApp();
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -131,6 +132,10 @@ export default function FinanceiroScreen() {
         { text: "Excluir", style: "destructive", onPress: () => deleteTransaction(tx.id) },
       ]
     );
+  }
+
+  if (loading) {
+    return <SkeletonFinance c={c} topPad={topPad} />;
   }
 
   return (

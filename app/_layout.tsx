@@ -16,9 +16,10 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ScreenSpinner } from "@/components/Spinner";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { ThemeProvider, useThemeMode } from "@/contexts/ThemeContext";
+import { ThemeProvider, useTheme, useThemeMode } from "@/contexts/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,6 +27,7 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const { theme } = useThemeMode();
+  const c = useTheme();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const segments = useSegments();
 
@@ -39,7 +41,14 @@ function RootLayoutNav() {
     }
   }, [isAuthenticated, authLoading, segments]);
 
-  if (authLoading) return null;
+  if (authLoading) {
+    return (
+      <>
+        <StatusBar style={theme === "dark" ? "light" : "dark"} />
+        <ScreenSpinner backgroundColor={c.background} color={c.tint} />
+      </>
+    );
+  }
 
   return (
     <>

@@ -14,11 +14,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/EmptyState";
 import { FAB } from "@/components/FAB";
 import { LeadCard } from "@/components/LeadCard";
+import { SkeletonListScreen } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 
 export default function LeadsScreen() {
-  const { leads } = useApp();
+  const { leads, loading } = useApp();
   const [search, setSearch] = useState("");
   const insets = useSafeAreaInsets();
   const c = useTheme();
@@ -36,6 +37,10 @@ export default function LeadsScreen() {
   }, [leads, search]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+
+  if (loading) {
+    return <SkeletonListScreen c={c} topPad={topPad} showSearch />;
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>

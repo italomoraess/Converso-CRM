@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ButtonSpinner } from "@/components/Spinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -180,7 +181,10 @@ export default function RegisterScreen() {
             activeOpacity={0.85}
           >
             {loading ? (
-              <Text style={styles.btnText}>Criando conta...</Text>
+              <>
+                <ButtonSpinner color="#fff" />
+                <Text style={styles.btnText}>Criar conta</Text>
+              </>
             ) : (
               <>
                 <Text style={styles.btnText}>Criar conta</Text>

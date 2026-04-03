@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { ButtonSpinner } from "@/components/Spinner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { FunnelStage, LeadOrigin, LEAD_ORIGINS } from "@/types";
@@ -85,7 +86,11 @@ export default function NewLeadScreen() {
           disabled={loading}
           testID="save-lead-btn"
         >
-          <Text style={styles.saveBtnText}>{loading ? "..." : "Salvar"}</Text>
+          {loading ? (
+            <ButtonSpinner color="#fff" />
+          ) : (
+            <Text style={styles.saveBtnText}>Salvar</Text>
+          )}
         </TouchableOpacity>
       </View>
 

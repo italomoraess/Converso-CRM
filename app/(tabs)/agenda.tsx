@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SkeletonAgenda } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { Task } from "@/types";
@@ -59,7 +60,7 @@ function isoDateStr(year: number, month: number, day: number): string {
 }
 
 export default function AgendaScreen() {
-  const { tasks, toggleTaskComplete, deleteTask } = useApp();
+  const { tasks, toggleTaskComplete, deleteTask, loading } = useApp();
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -121,6 +122,10 @@ export default function AgendaScreen() {
     const date = new Date(y, m - 1, d);
     return date.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
   }, [selectedDay]);
+
+  if (loading) {
+    return <SkeletonAgenda c={c} topPad={topPad} />;
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>

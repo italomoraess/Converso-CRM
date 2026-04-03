@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SkeletonRelatorios } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { Lead, LeadOrigin, LEAD_ORIGINS } from "@/types";
@@ -83,7 +84,7 @@ function PieChart({ data, c }: { data: { label: string; value: number; color: st
 }
 
 export default function RelatoriosScreen() {
-  const { leads } = useApp();
+  const { leads, loading } = useApp();
   const [period, setPeriod] = useState<Period>("mes");
   const insets = useSafeAreaInsets();
   const c = useTheme();
@@ -134,6 +135,10 @@ export default function RelatoriosScreen() {
     { key: "mes", label: "Mês" },
     { key: "tudo", label: "Tudo" },
   ];
+
+  if (loading) {
+    return <SkeletonRelatorios c={c} topPad={topPad} />;
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>

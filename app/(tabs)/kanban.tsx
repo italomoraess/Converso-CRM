@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SkeletonKanban } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { FunnelStage, Lead, FUNNEL_STAGES } from "@/types";
@@ -81,7 +82,7 @@ function KanbanCardItem({
 }
 
 export default function KanbanScreen() {
-  const { leads, updateLeadStage } = useApp();
+  const { leads, updateLeadStage, loading } = useApp();
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -104,6 +105,10 @@ export default function KanbanScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await updateLeadStage(lostModal.lead.id, "Perdido", motivoPerdido);
     setLostModal(null);
+  }
+
+  if (loading) {
+    return <SkeletonKanban c={c} topPad={topPad} />;
   }
 
   return (

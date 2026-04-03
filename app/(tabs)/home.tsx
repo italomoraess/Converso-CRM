@@ -12,8 +12,9 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme, useThemeMode } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Lead, Task } from "@/types";
 import {
   getOriginBadgeStyle,
@@ -186,8 +187,15 @@ export default function HomeScreen() {
   const { leads, tasks } = useApp();
   const insets = useSafeAreaInsets();
   const c = useTheme();
-  const { theme, toggleTheme } = useThemeMode();
+  const { user } = useAuth();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+
+  const avatarInitials = (user?.name ?? user?.email ?? "?")
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
   const today = todayISO();
 
   const thisMonthLeads = useMemo(() => {
@@ -214,38 +222,23 @@ export default function HomeScreen() {
   const now = new Date();
   const dateStr = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
 
-  async function handleToggleTheme() {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    toggleTheme();
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
       <View style={[styles.headerWrap, { paddingTop: topPad, backgroundColor: c.tint }]}>
         <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.greetText}>{greeting()} 👋</Text>
-            <Text style={styles.dateText}>{dateStr}</Text>
-          </View>
-          <View style={styles.headerActions}>
+          <View style={styles.headerLeft}>
             <TouchableOpacity
-              style={styles.headerBtn}
-              onPress={handleToggleTheme}
+              style={styles.userAvatar}
+              onPress={() => router.push("/perfil")}
+              activeOpacity={0.8}
             >
-              <Feather name={theme === "dark" ? "sun" : "moon"} size={20} color="rgba(255,255,255,0.85)" />
+              <Text style={styles.userAvatarText}>{avatarInitials}</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerBtn}
-              onPress={() => router.push("/agenda")}
-            >
-              <Feather name="bell" size={20} color="rgba(255,255,255,0.85)" />
-              {todayTasks.length > 0 && (
-                <View style={styles.notifBadge}>
-                  <Text style={styles.notifBadgeText}>{todayTasks.length}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
+            <View>
+              <Text style={styles.greetText}>{greeting()} 👋</Text>
+              <Text style={styles.dateText}>{dateStr}</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -415,10 +408,32 @@ const styles = StyleSheet.create({
   headerWrap: { paddingBottom: 20 },
   headerContent: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingTop: 12,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  userAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.5)",
+  },
+  userAvatarText: {
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    color: "#fff",
   },
   greetText: {
     fontSize: 22,
@@ -433,22 +448,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textTransform: "capitalize",
   },
-  headerActions: { flexDirection: "row", gap: 8, alignItems: "center" },
-  headerBtn: { position: "relative", padding: 6 },
-  notifBadge: {
-    position: "absolute",
-    top: 2,
-    right: 2,
-    backgroundColor: "#ef4444",
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 3,
-  },
-  notifBadgeText: { color: "#fff", fontSize: 9, fontWeight: "700" },
-
   scroll: { padding: 16, gap: 20 },
 
   statsGrid: {

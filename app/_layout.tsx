@@ -57,6 +57,7 @@ function RootLayoutNav() {
           options={{ headerShown: false, presentation: "modal" }}
         />
         <Stack.Screen name="perdidos" options={{ headerShown: false }} />
+        <Stack.Screen name="perfil" options={{ headerShown: false }} />
       </Stack>
     </>
   );

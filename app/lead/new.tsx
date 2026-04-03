@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { ButtonSpinner } from "@/components/Spinner";
+import { Button } from "@/components/Button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { FunnelStage, LeadOrigin, LEAD_ORIGINS } from "@/types";
@@ -80,18 +80,13 @@ export default function NewLeadScreen() {
           <Feather name="x" size={24} color={c.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: c.text }]}>Novo Lead</Text>
-        <TouchableOpacity
-          style={[styles.saveBtn, { backgroundColor: loading ? c.border : c.tint }]}
+        <Button
+          label="Salvar"
           onPress={handleSave}
-          disabled={loading}
+          loading={loading}
+          size="compact"
           testID="save-lead-btn"
-        >
-          {loading ? (
-            <ButtonSpinner color="#fff" />
-          ) : (
-            <Text style={styles.saveBtnText}>Salvar</Text>
-          )}
-        </TouchableOpacity>
+        />
       </View>
 
       <KeyboardAwareScrollView
@@ -232,12 +227,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerTitle: { fontSize: 17, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
-  saveBtn: {
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  saveBtnText: { color: "#fff", fontWeight: "600", fontFamily: "Inter_600SemiBold", fontSize: 14 },
   content: { padding: 16, gap: 12 },
   sectionLabel: { fontSize: 12, fontWeight: "600", fontFamily: "Inter_600SemiBold", letterSpacing: 0.5, textTransform: "uppercase", marginTop: 8 },
   inputWrap: {

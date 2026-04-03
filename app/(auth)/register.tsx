@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ButtonSpinner } from "@/components/Spinner";
+import { Button } from "@/components/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -173,25 +173,14 @@ export default function RegisterScreen() {
             </View>
           ) : null}
 
-          {/* Register Button */}
-          <TouchableOpacity
-            style={[styles.btn, { backgroundColor: loading ? c.textMuted : c.success }]}
+          <Button
+            label="Criar conta"
             onPress={handleRegister}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <>
-                <ButtonSpinner color="#fff" />
-                <Text style={styles.btnText}>Criar conta</Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.btnText}>Criar conta</Text>
-                <Feather name="check" size={18} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
+            loading={loading}
+            color={c.success}
+            icon="check"
+            style={{ alignSelf: "stretch", marginTop: 4 }}
+          />
         </View>
 
         {/* Login link */}
@@ -271,22 +260,6 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
   },
   hint: { fontSize: 12, fontFamily: "Inter_400Regular" },
-
-  btn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 15,
-    borderRadius: 14,
-    marginTop: 4,
-  },
-  btnText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
-  },
 
   footer: {
     flexDirection: "row",

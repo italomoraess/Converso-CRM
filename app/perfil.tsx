@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button } from "@/components/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme, useThemeMode } from "@/contexts/ThemeContext";
 
@@ -131,13 +132,13 @@ export default function PerfilScreen() {
                   placeholder="Seu nome"
                   placeholderTextColor={c.textMuted}
                 />
-                <TouchableOpacity
-                  style={[styles.saveBtn, { backgroundColor: c.tint }]}
+                <Button
+                  size="icon"
+                  icon="check"
                   onPress={handleSaveName}
-                  disabled={savingName}
-                >
-                  <Feather name={savingName ? "loader" : "check"} size={16} color="#fff" />
-                </TouchableOpacity>
+                  loading={savingName}
+                  accessibilityLabel="Salvar nome"
+                />
                 <TouchableOpacity
                   style={[styles.cancelBtn, { backgroundColor: c.border }]}
                   onPress={() => { setEditingName(false); setName(user?.name ?? ""); setNameError(null); }}
@@ -318,13 +319,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
-  },
-  saveBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
   },
   cancelBtn: {
     width: 32,

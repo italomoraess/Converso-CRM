@@ -1,18 +1,6 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
-type SpinnerSize = "small" | "large";
-
-export function ButtonSpinner({
-  color,
-  size = "small",
-}: {
-  color: string;
-  size?: SpinnerSize;
-}) {
-  return <ActivityIndicator color={color} size={size} />;
-}
-
 export function ScreenSpinner({
   backgroundColor,
   color,

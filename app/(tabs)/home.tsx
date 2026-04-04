@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 14,
     borderWidth: 1,
-    padding: 14,
+    padding: 10,
     alignItems: "center",
     gap: 8,
     shadowColor: "#000",

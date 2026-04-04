@@ -25,7 +25,7 @@ export default function TabLayout() {
           borderTopColor: c.border,
           elevation: 0,
           height: isWeb ? 84 : (isIOS ? 60 : 40),
-          paddingBottom: isIOS ? 20 : 0,
+          // paddingBottom: isIOS ? 20 : 0,
         },
         tabBarBackground: () =>
           isIOS ? (

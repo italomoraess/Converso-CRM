@@ -18,6 +18,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { Transaction, TransactionType } from "@/types";
 import { formatCurrency } from "@/utils";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 const MONTHS_FULL = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -283,7 +284,11 @@ export default function FinanceiroScreen() {
 
       {/* Add Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior="height"
+          keyboardVerticalOffset={30}
+        >
           <TouchableOpacity style={styles.modalBackdrop} onPress={() => setModalVisible(false)} />
           <View style={[styles.modalCard, { backgroundColor: c.surface }]}>
             {/* Type toggle */}
@@ -375,7 +380,7 @@ export default function FinanceiroScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

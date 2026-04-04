@@ -5,6 +5,7 @@ import {
   Alert,
   Modal,
   Platform,
+  ScrollView,
   SectionList,
   StyleSheet,
   Text,
@@ -19,6 +20,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { CatalogCategory, CatalogProduct } from "@/types";
 import { formatCurrency } from "@/utils";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function CatalogoScreen() {
   const { categories, products, addCategory, deleteCategory, addProduct, deleteProduct, loading } = useApp();
@@ -169,7 +171,11 @@ export default function CatalogoScreen() {
       )}
 
       <Modal visible={catModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior="height"
+          keyboardVerticalOffset={30}
+        >
           <View style={[styles.modalCard, { backgroundColor: c.surface }]}>
             <Text style={[styles.modalTitle, { color: c.text }]}>Nova Categoria</Text>
             <TextInput
@@ -189,11 +195,15 @@ export default function CatalogoScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={!!productModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior="height"
+          keyboardVerticalOffset={30}
+        >
           <View style={[styles.modalCard, { backgroundColor: c.surface }]}>
             <Text style={[styles.modalTitle, { color: c.text }]}>Novo Produto/Serviço</Text>
             <TextInput
@@ -250,7 +260,7 @@ export default function CatalogoScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

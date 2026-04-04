@@ -20,6 +20,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { FunnelStage, Lead, FUNNEL_STAGES } from "@/types";
 import { getKanbanColumnColor, getOriginBadgeStyle, getStageBadgeStyle, getWhatsAppUrl } from "@/utils";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 function KanbanCardItem({
   lead,
@@ -151,7 +152,11 @@ export default function KanbanScreen() {
       </ScrollView>
 
       <Modal visible={!!lostModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior="height"
+          keyboardVerticalOffset={30}
+        >
           <View style={[styles.modalCard, { backgroundColor: c.surface }]}>
             <Text style={[styles.modalTitle, { color: c.text }]}>Marcar como Perdido</Text>
             <Text style={[styles.modalSub, { color: c.textSecondary }]}>
@@ -180,7 +185,7 @@ export default function KanbanScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

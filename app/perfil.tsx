@@ -2,9 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/Button";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme, useThemeMode } from "@/contexts/ThemeContext";
 
@@ -91,10 +90,7 @@ export default function PerfilScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.flex, { backgroundColor: c.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={[styles.flex, { backgroundColor: c.background }]}>
       {/* Header */}
       <View style={[styles.headerWrap, { paddingTop: topPad, backgroundColor: c.tint }]}>
         <View style={styles.headerContent}>
@@ -106,10 +102,10 @@ export default function PerfilScreen() {
         </View>
       </View>
 
-      <ScrollView
+      <KeyboardAwareScrollViewCompat
         contentContainerStyle={[styles.scroll, { paddingBottom: 48 }]}
-        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        bottomOffset={20}
       >
         {/* Avatar + info */}
         <View style={[styles.profileCard, { backgroundColor: c.surface, borderColor: c.border }]}>
@@ -242,8 +238,8 @@ export default function PerfilScreen() {
             Converso · Plano {user.plan}
           </Text>
         )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollViewCompat>
+    </View>
   );
 }
 

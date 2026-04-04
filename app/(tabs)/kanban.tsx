@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Linking,
   Modal,
@@ -71,6 +72,7 @@ export default function KanbanScreen() {
 
   const [lostModal, setLostModal] = useState<{ lead: Lead } | null>(null);
   const [motivoPerdido, setMotivoPerdido] = useState("");
+  const [savingLost, setSavingLost] = useState(false);
 
   async function handleMoveStage(lead: Lead, stage: FunnelStage) {
     if (stage === "Perdido") {
@@ -84,9 +86,14 @@ export default function KanbanScreen() {
 
   async function confirmLost() {
     if (!lostModal) return;
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await updateLeadStage(lostModal.lead.id, "Perdido", motivoPerdido);
-    setLostModal(null);
+    setSavingLost(true);
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await updateLeadStage(lostModal.lead.id, "Perdido", motivoPerdido);
+      setLostModal(null);
+    } finally {
+      setSavingLost(false);
+    }
   }
 
   if (loading) {
@@ -178,10 +185,15 @@ export default function KanbanScreen() {
                 <Text style={[styles.modalBtnText, { color: c.textSecondary }]}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalBtn, { backgroundColor: c.danger, borderColor: c.danger }]}
+                style={[styles.modalBtn, { backgroundColor: c.danger, borderColor: c.danger, opacity: savingLost ? 0.7 : 1 }]}
                 onPress={confirmLost}
+                disabled={savingLost}
               >
-                <Text style={[styles.modalBtnText, { color: "#fff" }]}>Confirmar</Text>
+                {savingLost ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={[styles.modalBtnText, { color: "#fff" }]}>Confirmar</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>

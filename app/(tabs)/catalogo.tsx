@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Modal,
   Platform,
@@ -38,6 +39,8 @@ export default function CatalogoScreen() {
     durationUnit: "meses" as "dias" | "meses" | "anos",
     description: "",
   });
+  const [savingCat, setSavingCat] = useState(false);
+  const [savingProd, setSavingProd] = useState(false);
 
   const sections = categories.map((cat) => ({
     category: cat,
@@ -46,10 +49,15 @@ export default function CatalogoScreen() {
 
   async function handleAddCategory() {
     if (!catName.trim()) return;
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await addCategory(catName.trim());
-    setCatName("");
-    setCatModal(false);
+    setSavingCat(true);
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await addCategory(catName.trim());
+      setCatName("");
+      setCatModal(false);
+    } finally {
+      setSavingCat(false);
+    }
   }
 
   async function handleDeleteCategory(cat: CatalogCategory) {
@@ -65,17 +73,22 @@ export default function CatalogoScreen() {
 
   async function handleAddProduct() {
     if (!productModal || !prodForm.name.trim() || !prodForm.price.trim()) return;
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await addProduct({
-      categoryId: productModal.categoryId,
-      name: prodForm.name.trim(),
-      price: parseFloat(prodForm.price.replace(",", ".")) || 0,
-      duration: prodForm.duration ? parseInt(prodForm.duration) : undefined,
-      durationUnit: prodForm.duration ? prodForm.durationUnit : undefined,
-      description: prodForm.description.trim() || undefined,
-    });
-    setProductModal(null);
-    setProdForm({ name: "", price: "", duration: "", durationUnit: "meses", description: "" });
+    setSavingProd(true);
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await addProduct({
+        categoryId: productModal.categoryId,
+        name: prodForm.name.trim(),
+        price: parseFloat(prodForm.price.replace(",", ".")) || 0,
+        duration: prodForm.duration ? parseInt(prodForm.duration) : undefined,
+        durationUnit: prodForm.duration ? prodForm.durationUnit : undefined,
+        description: prodForm.description.trim() || undefined,
+      });
+      setProductModal(null);
+      setProdForm({ name: "", price: "", duration: "", durationUnit: "meses", description: "" });
+    } finally {
+      setSavingProd(false);
+    }
   }
 
   if (loading) {
@@ -190,8 +203,16 @@ export default function CatalogoScreen() {
               <TouchableOpacity style={[styles.modalBtn, { borderColor: c.border }]} onPress={() => setCatModal(false)}>
                 <Text style={[styles.modalBtnText, { color: c.textSecondary }]}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: c.tint, borderColor: c.tint }]} onPress={handleAddCategory}>
-                <Text style={[styles.modalBtnText, { color: "#fff" }]}>Criar</Text>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: c.tint, borderColor: c.tint, opacity: savingCat ? 0.7 : 1 }]}
+                onPress={handleAddCategory}
+                disabled={savingCat}
+              >
+                {savingCat ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={[styles.modalBtnText, { color: "#fff" }]}>Criar</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -255,8 +276,16 @@ export default function CatalogoScreen() {
               <TouchableOpacity style={[styles.modalBtn, { borderColor: c.border }]} onPress={() => setProductModal(null)}>
                 <Text style={[styles.modalBtnText, { color: c.textSecondary }]}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: c.tint, borderColor: c.tint }]} onPress={handleAddProduct}>
-                <Text style={[styles.modalBtnText, { color: "#fff" }]}>Adicionar</Text>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: c.tint, borderColor: c.tint, opacity: savingProd ? 0.7 : 1 }]}
+                onPress={handleAddProduct}
+                disabled={savingProd}
+              >
+                {savingProd ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={[styles.modalBtnText, { color: "#fff" }]}>Adicionar</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>

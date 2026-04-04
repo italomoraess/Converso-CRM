@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Modal,
   Platform,
@@ -60,6 +61,7 @@ export default function FinanceiroScreen() {
     category: "Serviço",
     date: todayStr(),
   });
+  const [saving, setSaving] = useState(false);
 
   function prevMonth() {
     if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
@@ -113,15 +115,20 @@ export default function FinanceiroScreen() {
       Alert.alert("Atenção", "Informe um valor válido");
       return;
     }
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    await addTransaction({
-      type: form.type,
-      value: numVal,
-      description: form.description.trim(),
-      category: form.category,
-      date: form.date,
-    });
-    setModalVisible(false);
+    setSaving(true);
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await addTransaction({
+        type: form.type,
+        value: numVal,
+        description: form.description.trim(),
+        category: form.category,
+        date: form.date,
+      });
+      setModalVisible(false);
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleDelete(tx: Transaction) {
@@ -373,10 +380,15 @@ export default function FinanceiroScreen() {
                 <Text style={[styles.modalBtnText, { color: c.textSecondary }]}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalBtn, { backgroundColor: form.type === "entrada" ? c.success : c.danger }]}
+                style={[styles.modalBtn, { backgroundColor: form.type === "entrada" ? c.success : c.danger, opacity: saving ? 0.7 : 1 }]}
                 onPress={handleSave}
+                disabled={saving}
               >
-                <Text style={[styles.modalBtnText, { color: "#fff" }]}>Salvar</Text>
+                {saving ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={[styles.modalBtnText, { color: "#fff" }]}>Salvar</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>

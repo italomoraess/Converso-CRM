@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -71,6 +71,15 @@ export default function AgendaScreen() {
   const [viewMonth, setViewMonth] = useState(now.getMonth());
   const [selectedDay, setSelectedDay] = useState(today);
 
+  useFocusEffect(
+    useCallback(() => {
+      const resetDate = new Date();
+      setViewYear(resetDate.getFullYear());
+      setViewMonth(resetDate.getMonth());
+      setSelectedDay(todayISO());
+    }, [])
+  );
+
   function prevMonth() {
     if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
     else setViewMonth(m => m - 1);
@@ -131,7 +140,10 @@ export default function AgendaScreen() {
     <View style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: c.surface, borderBottomColor: c.border }]}>
-        <Text style={[styles.title, { color: c.text }]}>Compromissos</Text>
+        <TouchableOpacity onPress={() => router.navigate("/(tabs)/home")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Feather name="arrow-left" size={24} color={c.text} />
+        </TouchableOpacity>
+        <Text style={[styles.title, { color: c.text, flex: 1, marginLeft: 12 }]}>Compromissos</Text>
         <TouchableOpacity
           style={[styles.addBtn, { backgroundColor: c.tint }]}
           onPress={handleAddTask}

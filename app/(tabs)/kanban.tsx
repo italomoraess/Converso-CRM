@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -74,6 +74,13 @@ export default function KanbanScreen() {
   const [motivoPerdido, setMotivoPerdido] = useState("");
   const [savingLost, setSavingLost] = useState(false);
 
+  useFocusEffect(
+    useCallback(() => {
+      setLostModal(null);
+      setMotivoPerdido("");
+    }, [])
+  );
+
   async function handleMoveStage(lead: Lead, stage: FunnelStage) {
     if (stage === "Perdido") {
       setLostModal({ lead });
@@ -108,6 +115,9 @@ export default function KanbanScreen() {
           { paddingTop: topPad + 12, backgroundColor: c.surface, borderBottomColor: c.border },
         ]}
       >
+        <TouchableOpacity onPress={() => router.navigate("/(tabs)/home")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Feather name="arrow-left" size={24} color={c.text} />
+        </TouchableOpacity>
         <Text style={[styles.title, { color: c.text }]}>Funil de Vendas</Text>
       </View>
 
@@ -209,6 +219,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
     borderBottomWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
   title: { fontSize: 26, fontWeight: "700", fontFamily: "Inter_700Bold" },
   board: { flex: 1, paddingVertical: 12 },

@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import React, { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -41,6 +42,15 @@ export default function CatalogoScreen() {
   });
   const [savingCat, setSavingCat] = useState(false);
   const [savingProd, setSavingProd] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      setCatModal(false);
+      setCatName("");
+      setProductModal(null);
+      setProdForm({ name: "", price: "", duration: "", durationUnit: "meses", description: "" });
+    }, [])
+  );
 
   const sections = categories.map((cat) => ({
     category: cat,
@@ -98,7 +108,10 @@ export default function CatalogoScreen() {
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
       <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: c.surface, borderBottomColor: c.border }]}>
-        <Text style={[styles.title, { color: c.text }]}>Catálogo</Text>
+        <TouchableOpacity onPress={() => router.navigate("/(tabs)/home")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Feather name="arrow-left" size={24} color={c.text} />
+        </TouchableOpacity>
+        <Text style={[styles.title, { color: c.text, flex: 1, marginLeft: 12 }]}>Catálogo</Text>
         <TouchableOpacity
           style={[styles.addCatBtn, { backgroundColor: c.tint }]}
           onPress={() => setCatModal(true)}

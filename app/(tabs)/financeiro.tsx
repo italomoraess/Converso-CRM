@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import React, { useMemo, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -62,6 +63,22 @@ export default function FinanceiroScreen() {
     date: todayStr(),
   });
   const [saving, setSaving] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const resetDate = new Date();
+      setViewYear(resetDate.getFullYear());
+      setViewMonth(resetDate.getMonth());
+      setModalVisible(false);
+      setForm({
+        type: "entrada",
+        value: "",
+        description: "",
+        category: "Serviço",
+        date: todayStr(),
+      });
+    }, [])
+  );
 
   function prevMonth() {
     if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
@@ -150,7 +167,10 @@ export default function FinanceiroScreen() {
     <View style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: c.surface, borderBottomColor: c.border }]}>
-        <Text style={[styles.title, { color: c.text }]}>Financeiro</Text>
+        <TouchableOpacity onPress={() => router.navigate("/(tabs)/home")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Feather name="arrow-left" size={24} color={c.text} />
+        </TouchableOpacity>
+        <Text style={[styles.title, { color: c.text, flex: 1, marginLeft: 12 }]}>Financeiro</Text>
         <View style={styles.headerBtns}>
           <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: c.success }]}

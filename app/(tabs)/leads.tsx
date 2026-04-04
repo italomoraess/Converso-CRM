@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
   Platform,
@@ -38,6 +38,12 @@ export default function LeadsScreen() {
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
+  useFocusEffect(
+    useCallback(() => {
+      setSearch("");
+    }, [])
+  );
+
   if (loading) {
     return <SkeletonListScreen c={c} topPad={topPad} showSearch />;
   }
@@ -45,8 +51,13 @@ export default function LeadsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
       <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: c.surface, borderBottomColor: c.border }]}>
-        <Text style={[styles.title, { color: c.text }]}>Leads</Text>
-        <Text style={[styles.count, { color: c.textSecondary }]}>{leads.length} contatos</Text>
+        <TouchableOpacity onPress={() => router.navigate("/(tabs)/home")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Feather name="arrow-left" size={24} color={c.text} />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.title, { color: c.text }]}>Leads</Text>
+          <Text style={[styles.count, { color: c.textSecondary }]}>{leads.length} contatos</Text>
+        </View>
       </View>
 
       <View style={[styles.searchWrap, { backgroundColor: c.surface, borderBottomColor: c.border }]}>
@@ -105,6 +116,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
     borderBottomWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
   title: { fontSize: 26, fontWeight: "700", fontFamily: "Inter_700Bold" },
   count: { fontSize: 13, marginTop: 2, fontFamily: "Inter_400Regular" },

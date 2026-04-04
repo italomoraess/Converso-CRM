@@ -17,12 +17,17 @@ export default function TabLayout() {
         tabBarActiveTintColor: c.tint,
         tabBarInactiveTintColor: c.tabIconDefault,
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: {
           position: "absolute",
           backgroundColor: isIOS ? "transparent" : c.tabBar,
           borderTopWidth: 1,
           borderTopColor: c.border,
           elevation: 0,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-around",
+          paddingBottom: 20,
           ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () =>
@@ -49,42 +54,42 @@ export default function TabLayout() {
         name="home"
         options={{
           title: "Início",
-          tabBarIcon: ({ color }) => <Feather name="home" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="home" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="leads"
         options={{
           title: "Leads",
-          tabBarIcon: ({ color }) => <Feather name="users" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="users" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="kanban"
         options={{
           title: "Funil",
-          tabBarIcon: ({ color }) => <Feather name="trello" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="trello" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="agenda"
         options={{
           title: "Agenda",
-          tabBarIcon: ({ color }) => <Feather name="calendar" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="calendar" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="catalogo"
         options={{
           title: "Catálogo",
-          tabBarIcon: ({ color }) => <Feather name="package" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="package" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="financeiro"
         options={{
           title: "Financeiro",
-          tabBarIcon: ({ color }) => <Feather name="dollar-sign" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="dollar-sign" size={24} color={color} />,
         }}
       />
     </Tabs>

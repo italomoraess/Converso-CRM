@@ -241,7 +241,7 @@ export default function HomeScreen() {
               <Text style={styles.userAvatarText}>{avatarInitials}</Text>
             </TouchableOpacity>
             <View>
-              <Text style={styles.greetText}>{greeting()} 👋</Text>
+              <Text style={styles.greetText}>{greeting()} {user?.name?.split(" ")[0] ?? ""} 👋</Text>
               <Text style={styles.dateText}>{dateStr}</Text>
             </View>
           </View>

@@ -19,7 +19,7 @@ import { SkeletonKanban } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
 import { FunnelStage, Lead, FUNNEL_STAGES } from "@/types";
-import { getKanbanColumnColor, getStageBadgeStyle, getWhatsAppUrl } from "@/utils";
+import { getKanbanColumnColor, getOriginBadgeStyle, getStageBadgeStyle, getWhatsAppUrl } from "@/utils";
 
 function KanbanCardItem({
   lead,
@@ -42,6 +42,13 @@ function KanbanCardItem({
         <Text style={[styles.kPhone, { color: c.textSecondary }]} numberOfLines={1}>
           {lead.telefone}
         </Text>
+        {lead.origem ? (
+          <View style={[styles.originTag, { backgroundColor: getOriginBadgeStyle(lead.origem, c).bg }]}>
+            <Text style={[styles.originTagText, { color: getOriginBadgeStyle(lead.origem, c).text }]} numberOfLines={1}>
+              {lead.origem}
+            </Text>
+          </View>
+        ) : null}
         {lead.stage === "Perdido" && lead.motivoPerdido ? (
           <Text style={[styles.kMotive, { color: c.danger }]} numberOfLines={1}>
             {lead.motivoPerdido}
@@ -50,32 +57,6 @@ function KanbanCardItem({
       </TouchableOpacity>
 
       <View style={styles.kActions}>
-        <TouchableOpacity
-          onPress={() => Linking.openURL(getWhatsAppUrl(lead.telefone))}
-          style={[styles.kActionBtn, { backgroundColor: c.whatsapp }]}
-          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-        >
-          <Feather name="message-circle" size={14} color="#fff" />
-        </TouchableOpacity>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.moveScroll}>
-          {stages
-            .filter((s) => s !== lead.stage)
-            .map((s) => {
-              const col = getKanbanColumnColor(s);
-              return (
-                <TouchableOpacity
-                  key={s}
-                  style={[styles.movePill, { borderColor: col }]}
-                  onPress={() => onMoveStage(lead, s)}
-                >
-                  <Text style={[styles.movePillText, { color: col }]} numberOfLines={1}>
-                    {s}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-        </ScrollView>
       </View>
     </View>
   );
@@ -306,4 +287,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalBtnText: { fontWeight: "600", fontFamily: "Inter_600SemiBold", fontSize: 15 },
+  originTag: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    marginTop: 2,
+  },
+  originTagText: { fontSize: 10, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
 });

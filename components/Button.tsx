@@ -57,7 +57,7 @@ export function Button({
     <TouchableOpacity
       style={[styles.row, touchStyle, { backgroundColor: bg, opacity }, style]}
       onPress={onPress}
-      disabled={isDisabled}
+      disabled={isDisabled || loading}
       activeOpacity={0.85}
       testID={testID}
       accessibilityLabel={accessibilityLabel ?? label}

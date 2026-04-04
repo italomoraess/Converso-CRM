@@ -24,11 +24,8 @@ export default function TabLayout() {
           borderTopWidth: 1,
           borderTopColor: c.border,
           elevation: 0,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-around",
-          paddingBottom: 20,
-          ...(isWeb ? { height: 84 } : {}),
+          height: isWeb ? 84 : (isIOS ? 60 : 40),
+          paddingBottom: isIOS ? 20 : 0,
         },
         tabBarBackground: () =>
           isIOS ? (

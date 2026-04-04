@@ -17,15 +17,13 @@ export default function TabLayout() {
         tabBarActiveTintColor: c.tint,
         tabBarInactiveTintColor: c.tabIconDefault,
         headerShown: false,
-        tabBarShowLabel: false,
         tabBarStyle: {
           position: "absolute",
           backgroundColor: isIOS ? "transparent" : c.tabBar,
           borderTopWidth: 1,
           borderTopColor: c.border,
           elevation: 0,
-          height: isWeb ? 84 : (isIOS ? 60 : 40),
-          // paddingBottom: isIOS ? 20 : 0,
+          ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () =>
           isIOS ? (

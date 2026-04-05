@@ -3,13 +3,15 @@ import { Tabs } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
+import { DrawerMenuProvider, useDrawerMenu } from "@/contexts/DrawerMenuContext";
 import { useTheme, useThemeMode } from "@/contexts/ThemeContext";
 
-export default function TabLayout() {
+function TabsNavigator() {
   const c = useTheme();
   const { theme } = useThemeMode();
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
+  const { openDrawer } = useDrawerMenu();
 
   return (
     <Tabs
@@ -44,6 +46,8 @@ export default function TabLayout() {
     >
       <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen name="relatorios" options={{ href: null }} />
+      <Tabs.Screen name="catalogo" options={{ href: null }} />
+      <Tabs.Screen name="financeiro" options={{ href: null }} />
 
       <Tabs.Screen
         name="home"
@@ -74,19 +78,26 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="catalogo"
+        name="menu"
         options={{
-          title: "Catálogo",
-          tabBarIcon: ({ color }) => <Feather name="package" size={24} color={color} />,
+          title: "Mais",
+          tabBarIcon: ({ color }) => <Feather name="menu" size={24} color={color} />,
         }}
-      />
-      <Tabs.Screen
-        name="financeiro"
-        options={{
-          title: "Financeiro",
-          tabBarIcon: ({ color }) => <Feather name="dollar-sign" size={24} color={color} />,
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            openDrawer();
+          },
         }}
       />
     </Tabs>
+  );
+}
+
+export default function TabLayout() {
+  return (
+    <DrawerMenuProvider>
+      <TabsNavigator />
+    </DrawerMenuProvider>
   );
 }

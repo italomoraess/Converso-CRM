@@ -35,17 +35,26 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+const ENVELOPE_KEYS = new Set(["data", "message", "success", "statusCode", "error"]);
+
+function unwrapEnvelope(payload: unknown): unknown {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return payload;
+  }
+  const record = payload as Record<string, unknown>;
+  if (!("data" in record)) {
+    return payload;
+  }
+  const keys = Object.keys(record);
+  if (keys.length === 0 || !keys.every((k) => ENVELOPE_KEYS.has(k))) {
+    return payload;
+  }
+  return record.data;
+}
+
 api.interceptors.response.use(
   (response) => {
-    const payload = response.data as NestBody<unknown> | unknown;
-    if (
-      payload &&
-      typeof payload === "object" &&
-      "data" in payload &&
-      "message" in payload
-    ) {
-      response.data = (payload as NestBody<unknown>).data;
-    }
+    response.data = unwrapEnvelope(response.data);
     return response;
   },
   async (error: AxiosError<NestBody<unknown>>) => {

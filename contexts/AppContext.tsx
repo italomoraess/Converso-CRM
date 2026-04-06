@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { appointmentsApi } from "@/services/appointments/appointments.service";
 import { catalogApi } from "@/services/catalog/catalog.service";
 import { financeApi } from "@/services/finance/finance.service";
@@ -66,6 +67,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
@@ -74,17 +76,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [financeCategories, setFinanceCategories] = useState<ApiFinanceCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadAll();
-  }, []);
-
-  async function loadAll() {
+  const loadAll = useCallback(async () => {
     const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
     if (!token) {
       setLoading(false);
       return;
     }
 
+    setLoading(true);
     try {
       const [leadsData, apptData, catData, prodData, txData, finCatData] = await Promise.all([
         leadsApi.list().catch(() => [] as ApiLead[]),
@@ -94,23 +93,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         financeApi.transactions.list().catch(() => [] as ApiTransaction[]),
         financeApi.categories.list().catch(() => [] as ApiFinanceCategory[]),
       ]);
-      setLeads(leadsData.map(apiLeadToLocal));
-      setTasks(apptData.map(apiApptToLocal));
-      setCategories(catData.map((c) => ({ id: c.id, name: c.name, createdAt: c.createdAt })));
-      setProducts(prodData.map(apiProductToLocal));
-      setTransactions(txData.map(apiTxToLocal));
-      setFinanceCategories(finCatData);
+      setLeads(Array.isArray(leadsData) ? leadsData.map(apiLeadToLocal) : []);
+      setTasks(Array.isArray(apptData) ? apptData.map(apiApptToLocal) : []);
+      setCategories(
+        Array.isArray(catData) ? catData.map((c) => ({ id: c.id, name: c.name, createdAt: c.createdAt })) : [],
+      );
+      setProducts(Array.isArray(prodData) ? prodData.map(apiProductToLocal) : []);
+      setTransactions(Array.isArray(txData) ? txData.map(apiTxToLocal) : []);
+      setFinanceCategories(Array.isArray(finCatData) ? finCatData : []);
     } catch {
       /* 401 etc. tratado no client axios */
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+    if (!isAuthenticated) {
+      setLeads([]);
+      setTasks([]);
+      setCategories([]);
+      setProducts([]);
+      setTransactions([]);
+      setFinanceCategories([]);
+      setLoading(false);
+      return;
+    }
+    void loadAll();
+  }, [authLoading, isAuthenticated, loadAll]);
 
   const refreshAll = useCallback(async () => {
-    setLoading(true);
     await loadAll();
-  }, []);
+  }, [loadAll]);
 
   async function getOrCreateFinanceCategory(name: string, type: TransactionType): Promise<string> {
     const existing = financeCategories.find(

@@ -147,7 +147,7 @@ export default function PerfilScreen() {
                 <Text style={[styles.profileName, { color: c.text }]}>
                   {user?.name ?? "Sem nome"}
                 </Text>
-                <Feather name="edit-2" size={13} color={c.textMuted} style={{ marginTop: 2 }} />
+                {/* <Feather name="edit-2" size={13} color={c.textMuted} style={{ marginTop: 2 }} /> */}
               </TouchableOpacity>
             )}
             {nameError ? (

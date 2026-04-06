@@ -1,13 +1,15 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Modal,
   Platform,
-  ScrollView,
   SectionList,
   StyleSheet,
   Text,
@@ -18,14 +20,17 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonCatalogo } from "@/components/skeletons/PageSkeletons";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { CatalogCategory, CatalogProduct } from "@/types";
 import { formatCurrency } from "@/utils";
+import { buildOrcamentoHtml, type OrcamentoPayload } from "@/utils/orcamento";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function CatalogoScreen() {
   const { categories, products, addCategory, deleteCategory, addProduct, deleteProduct, loading } = useApp();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -43,12 +48,25 @@ export default function CatalogoScreen() {
   const [savingCat, setSavingCat] = useState(false);
   const [savingProd, setSavingProd] = useState(false);
 
+  const [quoteModal, setQuoteModal] = useState(false);
+  const [quoteSelectedIds, setQuoteSelectedIds] = useState<string[]>([]);
+  const [quoteCliente, setQuoteCliente] = useState("");
+  const [quoteObs, setQuoteObs] = useState("");
+  const [quoteValidadeDias, setQuoteValidadeDias] = useState("7");
+  const [pdfLoading, setPdfLoading] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
       setCatModal(false);
       setCatName("");
       setProductModal(null);
       setProdForm({ name: "", price: "", duration: "", durationUnit: "meses", description: "" });
+      setQuoteModal(false);
+      setQuoteSelectedIds([]);
+      setQuoteCliente("");
+      setQuoteObs("");
+      setQuoteValidadeDias("7");
+      setPdfLoading(false);
     }, [])
   );
 
@@ -56,6 +74,100 @@ export default function CatalogoScreen() {
     category: cat,
     data: products.filter((p) => p.categoryId === cat.id),
   }));
+
+  const categoryById = useMemo(() => {
+    const m = new Map<string, CatalogCategory>();
+    categories.forEach((cat) => m.set(cat.id, cat));
+    return m;
+  }, [categories]);
+
+  const quoteTotal = useMemo(() => {
+    const set = new Set(quoteSelectedIds);
+    return products.filter((p) => set.has(p.id)).reduce((s, p) => s + p.price, 0);
+  }, [products, quoteSelectedIds]);
+
+  function toggleQuoteProduct(id: string) {
+    setQuoteSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  function openQuoteModal() {
+    if (products.length === 0) {
+      Alert.alert("Catálogo vazio", "Adicione produtos ou serviços antes de gerar um orçamento.");
+      return;
+    }
+    setQuoteSelectedIds([]);
+    setQuoteCliente("");
+    setQuoteObs("");
+    setQuoteValidadeDias("7");
+    setQuoteModal(true);
+  }
+
+  function buildQuotePayload(): OrcamentoPayload {
+    const set = new Set(quoteSelectedIds);
+    const chosen = products.filter((p) => set.has(p.id));
+    const items = chosen.map((p) => {
+      const cat = categoryById.get(p.categoryId);
+      const durationLine =
+        p.duration && p.durationUnit
+          ? `Duração: ${p.duration} ${p.durationUnit}`
+          : undefined;
+      return {
+        name: p.name,
+        categoryName: cat?.name,
+        price: p.price,
+        durationLine,
+        description: p.description,
+      };
+    });
+    const dias = parseInt(quoteValidadeDias.replace(/\D/g, ""), 10);
+    const validadeDias = Number.isFinite(dias) && dias > 0 ? dias : 7;
+    const emitente =
+      user?.name?.trim() ? `${user.name.trim()} · Converso` : "Converso CRM";
+    return {
+      emitenteLabel: emitente,
+      cliente: quoteCliente,
+      items,
+      observacoes: quoteObs,
+      validadeDias,
+    };
+  }
+
+  async function handleExportPdf() {
+    if (quoteSelectedIds.length === 0) {
+      Alert.alert("Selecione itens", "Marque pelo menos um produto ou serviço no orçamento.");
+      return;
+    }
+    setPdfLoading(true);
+    try {
+      const html = buildOrcamentoHtml(buildQuotePayload());
+      const { uri } = await Print.printToFileAsync({ html });
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "application/pdf",
+          dialogTitle: "Orçamento",
+          UTI: "com.adobe.pdf",
+        });
+      } else {
+        const opened = await Linking.canOpenURL(uri);
+        if (opened) {
+          await Linking.openURL(uri);
+        } else {
+          Alert.alert(
+            "PDF gerado",
+            "O arquivo foi criado. Use um dispositivo com compartilhamento disponível para enviar o PDF.",
+          );
+        }
+      }
+    } catch {
+      Alert.alert("Erro", "Não foi possível gerar o PDF. Tente novamente.");
+    } finally {
+      setPdfLoading(false);
+    }
+  }
 
   async function handleAddCategory() {
     if (!catName.trim()) return;
@@ -111,15 +223,26 @@ export default function CatalogoScreen() {
         <TouchableOpacity onPress={() => router.navigate("/(tabs)/home")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Feather name="arrow-left" size={24} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: c.text, flex: 1, marginLeft: 12 }]}>Catálogo</Text>
-        <TouchableOpacity
-          style={[styles.addCatBtn, { backgroundColor: c.tint }]}
-          onPress={() => setCatModal(true)}
-          testID="add-category-btn"
-        >
-          <Feather name="plus" size={16} color="#fff" />
-          <Text style={styles.addCatText}>Categoria</Text>
-        </TouchableOpacity>
+        <Text style={[styles.title, { color: c.text, flex: 1, marginLeft: 12 }]} numberOfLines={1}>
+          Catálogo
+        </Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[styles.quoteBtn, { borderColor: c.tint }]}
+            onPress={openQuoteModal}
+            testID="quote-btn"
+          >
+            <Feather name="file-text" size={18} color={c.tint} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.addCatBtn, { backgroundColor: c.tint }]}
+            onPress={() => setCatModal(true)}
+            testID="add-category-btn"
+          >
+            <Feather name="plus" size={16} color="#fff" />
+            <Text style={styles.addCatText}>Categoria</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {sections.length === 0 ? (
@@ -304,6 +427,130 @@ export default function CatalogoScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <Modal visible={quoteModal} animationType="slide">
+        <KeyboardAvoidingView
+          style={[styles.quoteRoot, { backgroundColor: c.background }]}
+          behavior="height"
+          keyboardVerticalOffset={0}
+        >
+          <View style={[styles.quoteTopBar, { paddingTop: topPad + 8, borderBottomColor: c.border }]}>
+            <Text style={[styles.quoteModalTitle, { color: c.text }]}>Novo orçamento</Text>
+            <TouchableOpacity
+              onPress={() => setQuoteModal(false)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Feather name="x" size={26} color={c.text} />
+            </TouchableOpacity>
+          </View>
+          <SectionList
+            style={styles.quoteList}
+            sections={sections}
+            keyExtractor={(item: CatalogProduct) => item.id}
+            stickySectionHeadersEnabled={false}
+            keyboardShouldPersistTaps="handled"
+            ListHeaderComponent={
+              <View style={styles.quoteForm}>
+                <TextInput
+                  style={[styles.input, { borderColor: c.border, color: c.text, backgroundColor: c.surface }]}
+                  placeholder="Cliente (opcional)"
+                  placeholderTextColor={c.textMuted}
+                  value={quoteCliente}
+                  onChangeText={setQuoteCliente}
+                />
+                <View style={styles.quoteRow}>
+                  <Text style={[styles.quoteLabel, { color: c.textSecondary }]}>Válido por (dias)</Text>
+                  <TextInput
+                    style={[
+                      styles.quoteDiasInput,
+                      { borderColor: c.border, color: c.text, backgroundColor: c.surface },
+                    ]}
+                    value={quoteValidadeDias}
+                    onChangeText={setQuoteValidadeDias}
+                    keyboardType="number-pad"
+                    maxLength={3}
+                  />
+                </View>
+                <TextInput
+                  style={[
+                    styles.input,
+                    styles.quoteObsInput,
+                    { borderColor: c.border, color: c.text, backgroundColor: c.surface },
+                  ]}
+                  placeholder="Observações (opcional)"
+                  placeholderTextColor={c.textMuted}
+                  value={quoteObs}
+                  onChangeText={setQuoteObs}
+                  multiline
+                />
+                <Text style={[styles.quoteHint, { color: c.textMuted }]}>Toque nos itens para incluir no orçamento</Text>
+              </View>
+            }
+            renderSectionHeader={({ section }) => (
+              <View style={[styles.quoteSecHead, { backgroundColor: c.background }]}>
+                <Text style={[styles.quoteSecTitle, { color: c.text }]}>{section.category.name}</Text>
+              </View>
+            )}
+            renderItem={({ item }) => {
+              const on = quoteSelectedIds.includes(item.id);
+              return (
+                <TouchableOpacity
+                  style={[styles.quoteItemRow, { backgroundColor: c.surface, borderColor: c.border }]}
+                  onPress={() => toggleQuoteProduct(item.id)}
+                  activeOpacity={0.75}
+                >
+                  <Feather name={on ? "check-square" : "square"} size={22} color={on ? c.tint : c.textMuted} />
+                  <View style={styles.quoteItemMid}>
+                    <Text style={[styles.quoteItemName, { color: c.text }]} numberOfLines={2}>
+                      {item.name}
+                    </Text>
+                    {item.description ? (
+                      <Text style={[styles.quoteItemDesc, { color: c.textMuted }]} numberOfLines={1}>
+                        {item.description}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <Text style={[styles.quoteItemPrice, { color: c.tint }]}>{formatCurrency(item.price)}</Text>
+                </TouchableOpacity>
+              );
+            }}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 + insets.bottom }}
+          />
+          <View
+            style={[
+              styles.quoteFooter,
+              {
+                borderTopColor: c.border,
+                backgroundColor: c.surface,
+                paddingBottom: Math.max(insets.bottom, 12),
+              },
+            ]}
+          >
+            <View style={styles.quoteFooterTop}>
+              <Text style={[styles.quoteTotalLabel, { color: c.textSecondary }]}>Total</Text>
+              <Text style={[styles.quoteTotalValue, { color: c.tint }]}>{formatCurrency(quoteTotal)}</Text>
+            </View>
+            <TouchableOpacity
+              style={[
+                styles.quotePdfBtn,
+                { backgroundColor: c.tint },
+                pdfLoading && { opacity: 0.75 },
+              ]}
+              onPress={handleExportPdf}
+              disabled={pdfLoading}
+            >
+              {pdfLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Feather name="file-text" size={20} color="#fff" />
+                  <Text style={styles.quotePdfBtnText}>Gerar PDF</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -319,6 +566,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   title: { fontSize: 26, fontWeight: "700", fontFamily: "Inter_700Bold" },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  quoteBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   addCatBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -369,4 +625,72 @@ const styles = StyleSheet.create({
   modalBtns: { flexDirection: "row", gap: 10 },
   modalBtn: { flex: 1, borderWidth: 1, borderRadius: 12, paddingVertical: 14, alignItems: "center" },
   modalBtnText: { fontWeight: "600", fontFamily: "Inter_600SemiBold", fontSize: 15 },
+  quoteRoot: { flex: 1 },
+  quoteTopBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+  },
+  quoteModalTitle: { fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold" },
+  quoteList: { flex: 1 },
+  quoteForm: { gap: 10, paddingTop: 16, paddingBottom: 8 },
+  quoteRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  quoteLabel: { fontSize: 14, fontFamily: "Inter_500Medium" },
+  quoteDiasInput: {
+    minWidth: 64,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 15,
+    fontFamily: "Inter_400Regular",
+    textAlign: "center",
+  },
+  quoteObsInput: { minHeight: 72, textAlignVertical: "top" },
+  quoteHint: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 4 },
+  quoteSecHead: { paddingTop: 12, paddingBottom: 6 },
+  quoteSecTitle: { fontSize: 15, fontWeight: "700", fontFamily: "Inter_700Bold" },
+  quoteItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  quoteItemMid: { flex: 1, minWidth: 0 },
+  quoteItemName: { fontSize: 15, fontWeight: "500", fontFamily: "Inter_500Medium" },
+  quoteItemDesc: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
+  quoteItemPrice: { fontSize: 15, fontWeight: "700", fontFamily: "Inter_700Bold" },
+  quoteFooter: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopWidth: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    gap: 12,
+  },
+  quoteFooterTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  quoteTotalLabel: { fontSize: 14, fontFamily: "Inter_500Medium" },
+  quoteTotalValue: { fontSize: 22, fontWeight: "700", fontFamily: "Inter_700Bold" },
+  quotePdfBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderRadius: 12,
+    paddingVertical: 16,
+  },
+  quotePdfBtnText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
+  },
 });

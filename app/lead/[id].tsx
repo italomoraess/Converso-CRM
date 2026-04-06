@@ -6,6 +6,7 @@ import {
   Alert,
   Linking,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SkeletonLeadDetail } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
+import { useAppRefreshControl } from "@/hooks/useRefreshControl";
 import { ColorScheme } from "@/constants/colors";
 import { FunnelStage, FUNNEL_STAGES } from "@/types";
 import { formatDate, formatDateTime, getKanbanColumnColor, getOriginBadgeStyle, getStageBadgeStyle, getWhatsAppUrl } from "@/utils";
@@ -26,6 +28,7 @@ export default function LeadDetailScreen() {
   const lead = leads.find((l) => l.id === id);
   const insets = useSafeAreaInsets();
   const c = useTheme();
+  const refreshProps = useAppRefreshControl(c);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const [stageModal, setStageModal] = useState(false);
@@ -95,6 +98,7 @@ export default function LeadDetailScreen() {
       <ScrollView
         contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: Platform.OS === "web" ? 120 : 80 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl {...refreshProps} />}
       >
         <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
           <View style={styles.badges}>

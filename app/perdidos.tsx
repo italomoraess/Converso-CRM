@@ -4,6 +4,7 @@ import React from "react";
 import {
   FlatList,
   Platform,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,6 +15,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { SkeletonListScreen } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
+import { useAppRefreshControl } from "@/hooks/useRefreshControl";
 import { formatDate } from "@/utils";
 
 export default function PerdidosScreen() {
@@ -21,6 +23,7 @@ export default function PerdidosScreen() {
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const refreshProps = useAppRefreshControl(c);
   const perdidos = leads.filter((l) => l.stage === "Perdido");
 
   if (loading) {
@@ -40,6 +43,7 @@ export default function PerdidosScreen() {
       <FlatList
         data={perdidos}
         keyExtractor={(i) => i.id}
+        refreshControl={<RefreshControl {...refreshProps} />}
         contentContainerStyle={[
           styles.list,
           perdidos.length === 0 && styles.emptyList,

@@ -4,6 +4,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
   Platform,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
@@ -17,6 +18,7 @@ import { LeadCard } from "@/components/LeadCard";
 import { SkeletonListScreen } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
+import { useAppRefreshControl } from "@/hooks/useRefreshControl";
 
 export default function LeadsScreen() {
   const { leads, loading } = useApp();
@@ -37,6 +39,7 @@ export default function LeadsScreen() {
   }, [leads, search]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const refreshProps = useAppRefreshControl(c);
 
   useFocusEffect(
     useCallback(() => {
@@ -84,6 +87,7 @@ export default function LeadsScreen() {
         data={filtered}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <LeadCard lead={item} />}
+        refreshControl={<RefreshControl {...refreshProps} />}
         contentContainerStyle={[
           styles.list,
           filtered.length === 0 && styles.emptyList,

@@ -5,6 +5,7 @@ import React, { useMemo } from "react";
 import {
   Linking,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,6 +25,7 @@ import {
   todayISO,
 } from "@/utils";
 import { ColorScheme } from "@/constants/colors";
+import { useAppRefreshControl } from "@/hooks/useRefreshControl";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -190,6 +192,7 @@ export default function HomeScreen() {
   const c = useTheme();
   const { user } = useAuth();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const refreshProps = useAppRefreshControl(c);
 
   const avatarInitials = (user?.name ?? user?.email ?? "?")
     .split(" ")
@@ -251,6 +254,7 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 120 : 100 }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl {...refreshProps} />}
       >
         {/* Stats Grid */}
         <View style={styles.statsGrid}>

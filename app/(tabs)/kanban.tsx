@@ -8,6 +8,7 @@ import {
   Linking,
   Modal,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SkeletonKanban } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
+import { useAppRefreshControl } from "@/hooks/useRefreshControl";
 import { FunnelStage, Lead, FUNNEL_STAGES } from "@/types";
 import { getKanbanColumnColor, getOriginBadgeStyle, getStageBadgeStyle, getWhatsAppUrl } from "@/utils";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -68,6 +70,7 @@ export default function KanbanScreen() {
   const { leads, updateLeadStage, loading } = useApp();
   const insets = useSafeAreaInsets();
   const c = useTheme();
+  const refreshProps = useAppRefreshControl(c);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const [lostModal, setLostModal] = useState<{ lead: Lead } | null>(null);
@@ -121,7 +124,21 @@ export default function KanbanScreen() {
         <Text style={[styles.title, { color: c.text }]}>Funil de Vendas</Text>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.board}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={<RefreshControl {...refreshProps} />}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
+      >
+        <ScrollView
+          horizontal
+          nestedScrollEnabled
+          showsHorizontalScrollIndicator={false}
+          style={styles.board}
+          keyboardShouldPersistTaps="handled"
+        >
         {FUNNEL_STAGES.map((stage) => {
           const stageLeads = leads.filter((l) => l.stage === stage);
           const colColor = getKanbanColumnColor(stage);
@@ -166,6 +183,7 @@ export default function KanbanScreen() {
             </View>
           );
         })}
+        </ScrollView>
       </ScrollView>
 
       <Modal visible={!!lostModal} transparent animationType="slide">

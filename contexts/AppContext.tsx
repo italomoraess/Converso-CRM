@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -75,6 +76,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [financeCategories, setFinanceCategories] = useState<ApiFinanceCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const loadRequestIdRef = useRef(0);
 
   const loadAll = useCallback(async () => {
     const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
@@ -83,28 +85,47 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const requestId = ++loadRequestIdRef.current;
     setLoading(true);
+
     try {
-      const [leadsData, apptData, catData, prodData, txData, finCatData] = await Promise.all([
-        leadsApi.list().catch(() => [] as ApiLead[]),
-        appointmentsApi.list().catch(() => [] as ApiAppointment[]),
-        catalogApi.categories.list().catch(() => [] as ApiCategory[]),
-        catalogApi.products.list().catch(() => [] as ApiProduct[]),
-        financeApi.transactions.list().catch(() => [] as ApiTransaction[]),
-        financeApi.categories.list().catch(() => [] as ApiFinanceCategory[]),
+      const settled = await Promise.allSettled([
+        leadsApi.list(),
+        appointmentsApi.list(),
+        catalogApi.categories.list(),
+        catalogApi.products.list(),
+        financeApi.transactions.list(),
+        financeApi.categories.list(),
       ]);
-      setLeads(Array.isArray(leadsData) ? leadsData.map(apiLeadToLocal) : []);
-      setTasks(Array.isArray(apptData) ? apptData.map(apiApptToLocal) : []);
-      setCategories(
-        Array.isArray(catData) ? catData.map((c) => ({ id: c.id, name: c.name, createdAt: c.createdAt })) : [],
-      );
-      setProducts(Array.isArray(prodData) ? prodData.map(apiProductToLocal) : []);
-      setTransactions(Array.isArray(txData) ? txData.map(apiTxToLocal) : []);
-      setFinanceCategories(Array.isArray(finCatData) ? finCatData : []);
-    } catch {
-      /* 401 etc. tratado no client axios */
+
+      if (requestId !== loadRequestIdRef.current) {
+        return;
+      }
+
+      const [lr, ar, cr, pr, tr, fr] = settled;
+
+      if (lr.status === "fulfilled" && Array.isArray(lr.value)) {
+        setLeads(lr.value.map(apiLeadToLocal));
+      }
+      if (ar.status === "fulfilled" && Array.isArray(ar.value)) {
+        setTasks(ar.value.map(apiApptToLocal));
+      }
+      if (cr.status === "fulfilled" && Array.isArray(cr.value)) {
+        setCategories(cr.value.map((x) => ({ id: x.id, name: x.name, createdAt: x.createdAt })));
+      }
+      if (pr.status === "fulfilled" && Array.isArray(pr.value)) {
+        setProducts(pr.value.map(apiProductToLocal));
+      }
+      if (tr.status === "fulfilled" && Array.isArray(tr.value)) {
+        setTransactions(tr.value.map(apiTxToLocal));
+      }
+      if (fr.status === "fulfilled" && Array.isArray(fr.value)) {
+        setFinanceCategories(fr.value);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === loadRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 

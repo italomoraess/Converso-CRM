@@ -10,6 +10,8 @@ import {
   Linking,
   Modal,
   Platform,
+  RefreshControl,
+  ScrollView,
   SectionList,
   StyleSheet,
   Text,
@@ -24,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { CatalogCategory, CatalogProduct } from "@/types";
+import { useAppRefreshControl } from "@/hooks/useRefreshControl";
 import { formatCurrency } from "@/utils";
 import { buildOrcamentoHtml, type OrcamentoPayload } from "@/utils/orcamento";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -33,6 +36,7 @@ export default function CatalogoScreen() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const c = useTheme();
+  const refreshProps = useAppRefreshControl(c);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const [catModal, setCatModal] = useState(false);
@@ -246,18 +250,26 @@ export default function CatalogoScreen() {
       </View>
 
       {sections.length === 0 ? (
-        <EmptyState
-          icon="package"
-          title="Catálogo vazio"
-          subtitle="Crie categorias e adicione seus produtos e serviços"
-          ctaLabel="Nova Categoria"
-          onCta={() => setCatModal(true)}
-        />
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={<RefreshControl {...refreshProps} />}
+          showsVerticalScrollIndicator={false}
+        >
+          <EmptyState
+            icon="package"
+            title="Catálogo vazio"
+            subtitle="Crie categorias e adicione seus produtos e serviços"
+            ctaLabel="Nova Categoria"
+            onCta={() => setCatModal(true)}
+          />
+        </ScrollView>
       ) : (
         <SectionList
           sections={sections}
           keyExtractor={(item: CatalogProduct) => item.id}
           stickySectionHeadersEnabled={false}
+          refreshControl={<RefreshControl {...refreshProps} />}
           contentContainerStyle={{ padding: 16, paddingBottom: Platform.OS === "web" ? 120 : 100 }}
           renderSectionHeader={({ section }) => (
             <View style={[styles.catHeader, { backgroundColor: c.background }]}>

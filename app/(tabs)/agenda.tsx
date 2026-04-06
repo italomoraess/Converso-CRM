@@ -6,6 +6,7 @@ import {
   Alert,
   FlatList,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SkeletonAgenda } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
+import { useAppRefreshControl } from "@/hooks/useRefreshControl";
 import { Task } from "@/types";
 import { todayISO } from "@/utils";
 
@@ -64,6 +66,7 @@ export default function AgendaScreen() {
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const refreshProps = useAppRefreshControl(c);
   const today = todayISO();
 
   const now = new Date();
@@ -153,7 +156,11 @@ export default function AgendaScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[0]}
+        refreshControl={<RefreshControl {...refreshProps} />}
+      >
         {/* Calendar Card */}
         <View style={[styles.calendarCard, { backgroundColor: c.surface, borderBottomColor: c.border }]}>
           {/* Month Nav */}

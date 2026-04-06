@@ -7,6 +7,7 @@ import {
   Alert,
   Modal,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SkeletonFinance } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
+import { useAppRefreshControl } from "@/hooks/useRefreshControl";
 import { Transaction, TransactionType } from "@/types";
 import { formatCurrency } from "@/utils";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -48,6 +50,7 @@ export default function FinanceiroScreen() {
   const { transactions, addTransaction, deleteTransaction, loading } = useApp();
   const insets = useSafeAreaInsets();
   const c = useTheme();
+  const refreshProps = useAppRefreshControl(c);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const now = new Date();
@@ -189,7 +192,10 @@ export default function FinanceiroScreen() {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl {...refreshProps} />}
+      >
         {/* Balance Card */}
         <View style={[styles.balanceCard, { backgroundColor: saldo >= 0 ? c.tint : c.danger }]}>
           <Text style={styles.balanceLabel}>Saldo do mês</Text>

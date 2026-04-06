@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SkeletonRelatorios } from "@/components/skeletons/PageSkeletons";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useApp } from "@/contexts/AppContext";
+import { useAppRefreshControl } from "@/hooks/useRefreshControl";
 import { Lead, LeadOrigin, LEAD_ORIGINS } from "@/types";
 import { formatCurrency, formatDate } from "@/utils";
 import { ColorScheme } from "@/constants/colors";
@@ -89,6 +91,7 @@ export default function RelatoriosScreen() {
   const insets = useSafeAreaInsets();
   const c = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const refreshProps = useAppRefreshControl(c);
 
   const { from, label } = getDateRange(period);
 
@@ -162,6 +165,7 @@ export default function RelatoriosScreen() {
       <ScrollView
         contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: Platform.OS === "web" ? 120 : 100 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl {...refreshProps} />}
       >
         <Text style={[styles.sectionTitle, { color: c.textSecondary }]}>{label}</Text>
 

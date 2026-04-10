@@ -21,7 +21,9 @@
       "backgroundColor": "#0f172a"
     },
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/icon.png",
+      "output": "static",
+      "bundler": "metro"
     },
     "plugins": [
       [

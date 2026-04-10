@@ -4,7 +4,7 @@ import axios, {
   type AxiosInstance,
   type InternalAxiosRequestConfig,
 } from "axios";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import {
   ACCESS_TOKEN_KEY,
   REFRESH_TOKEN_KEY,
@@ -61,6 +61,15 @@ api.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
+
+    if (error.response?.status === 402) {
+      router.replace("/assinatura" as Href);
+      const data = error.response?.data;
+      const msg = data && typeof data === "object" && "message" in data
+        ? getApiErrorMessage(data)
+        : "Assinatura necessária";
+      return Promise.reject(new Error(msg));
+    }
 
     if (error.response?.status !== 401 || originalRequest._retry || !originalRequest) {
       const data = error.response?.data;

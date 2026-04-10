@@ -17,6 +17,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -37,11 +38,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ]);
       if (token && userStr) {
         setUser(JSON.parse(userStr));
+        try {
+          const profile = await authService.refreshProfile();
+          await AsyncStorage.setItem(USER_KEY, JSON.stringify(profile));
+          setUser(profile);
+        } catch {
+          /* ignore */
+        }
       }
     } catch {
       /* ignore */
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function refreshProfile() {
+    const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!token) return;
+    try {
+      const profile = await authService.refreshProfile();
+      await AsyncStorage.setItem(USER_KEY, JSON.stringify(profile));
+      setUser(profile);
+    } catch {
+      /* ignore */
     }
   }
 
@@ -92,7 +112,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, loading, login, register, logout }}
+      value={{
+        user,
+        isAuthenticated: !!user,
+        loading,
+        login,
+        register,
+        logout,
+        refreshProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

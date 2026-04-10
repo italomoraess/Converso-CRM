@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getApiErrorMessage } from "../http/errors";
+import { get } from "../http/request";
 import { publicGet, publicPost } from "../http/public-request";
 import type { AuthSession, AuthUser } from "./auth.types";
 
@@ -50,9 +51,6 @@ export async function logout(accessToken: string, refreshToken: string): Promise
   }
 }
 
-export async function getProfile(accessToken: string): Promise<AuthUser> {
-  const wrapper = await publicGet<NestBody<AuthUser>>("/auth/me", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return wrapper.data;
+export async function refreshProfile(): Promise<AuthUser> {
+  return get<AuthUser>("/auth/me");
 }

@@ -3,6 +3,9 @@ export interface AuthUser {
   email: string;
   name?: string;
   plan?: string;
+  trialEndsAt?: string;
+  stripeSubscriptionStatus?: string | null;
+  hasAccess?: boolean;
 }
 
 export interface AuthTokens {

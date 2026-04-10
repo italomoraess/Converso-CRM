@@ -7,7 +7,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { Feather } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack, router, useSegments } from "expo-router";
+import { Stack, router, useSegments, type Href } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
@@ -28,18 +28,32 @@ const queryClient = new QueryClient();
 function RootLayoutNav() {
   const { theme } = useThemeMode();
   const c = useTheme();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
   const segments = useSegments();
 
   useEffect(() => {
     if (authLoading) return;
-    const inAuthGroup = segments[0] === "(auth)";
+    const seg0 = segments[0] as string | undefined;
+    const inAuthGroup = seg0 === "(auth)";
+    const inAssinatura = seg0 === "assinatura";
+    const inBilling = seg0 === "billing";
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)/login");
-    } else if (isAuthenticated && inAuthGroup) {
+      return;
+    }
+    if (isAuthenticated && inAuthGroup) {
+      router.replace("/(tabs)/home");
+      return;
+    }
+    const needsPaywall = user?.hasAccess === false;
+    if (isAuthenticated && needsPaywall && !inAssinatura && !inBilling) {
+      router.replace("/assinatura" as Href);
+      return;
+    }
+    if (isAuthenticated && user?.hasAccess === true && inAssinatura) {
       router.replace("/(tabs)/home");
     }
-  }, [isAuthenticated, authLoading, segments]);
+  }, [isAuthenticated, authLoading, segments, user?.hasAccess]);
 
   if (authLoading) {
     return (
@@ -67,6 +81,9 @@ function RootLayoutNav() {
         />
         <Stack.Screen name="perdidos" options={{ headerShown: false }} />
         <Stack.Screen name="perfil" options={{ headerShown: false }} />
+        <Stack.Screen name="assinatura" options={{ headerShown: false }} />
+        <Stack.Screen name="billing/success" options={{ headerShown: false }} />
+        <Stack.Screen name="billing/cancel" options={{ headerShown: false }} />
       </Stack>
     </>
   );

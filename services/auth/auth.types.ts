@@ -6,6 +6,8 @@ export interface AuthUser {
   trialEndsAt?: string;
   stripeSubscriptionStatus?: string | null;
   hasAccess?: boolean;
+  subscriptionCancelAtPeriodEnd?: boolean;
+  subscriptionPeriodEnd?: string | null;
 }
 
 export interface AuthTokens {

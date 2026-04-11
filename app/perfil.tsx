@@ -224,7 +224,7 @@ export default function PerfilScreen() {
             {user?.plan ? (
               <View style={[styles.planBadge, { backgroundColor: c.tint + "18" }]}>
                 <Feather name="star" size={11} color={c.tint} />
-                <Text style={[styles.planText, { color: c.tint }]}>{user.plan}</Text>
+                <Text style={[styles.planText, { color: c.tint }]}>{user.plan.toUpperCase()}</Text>
               </View>
             ) : null}
           </View>
@@ -365,7 +365,7 @@ export default function PerfilScreen() {
 
         {user?.plan && (
           <Text style={[styles.version, { color: c.textMuted }]}>
-            Converso · Plano {user.plan}
+            CONVERSO · PLANO {user.plan.toUpperCase()}
           </Text>
         )}
       </KeyboardAwareScrollViewCompat>

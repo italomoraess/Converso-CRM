@@ -68,7 +68,8 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
+  const billingAccess = user?.hasAccess === true;
   const [leads, setLeads] = useState<Lead[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
@@ -144,7 +145,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     void loadAll();
-  }, [authLoading, isAuthenticated, loadAll]);
+  }, [authLoading, isAuthenticated, billingAccess, loadAll]);
 
   const refreshAll = useCallback(async () => {
     await loadAll();

@@ -9,6 +9,7 @@ import { Feather } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, router, useSegments, type Href } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as WebBrowser from "expo-web-browser";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -22,6 +23,8 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider, useTheme, useThemeMode } from "@/contexts/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
+
+WebBrowser.maybeCompleteAuthSession();
 
 const queryClient = new QueryClient();
 

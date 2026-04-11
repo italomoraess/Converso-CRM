@@ -17,7 +17,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: () => Promise<AuthUser | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -55,13 +55,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function refreshProfile() {
     const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
-    if (!token) return;
+    if (!token) return null;
     try {
       const profile = await authService.refreshProfile();
       await AsyncStorage.setItem(USER_KEY, JSON.stringify(profile));
       setUser(profile);
+      return profile;
     } catch {
-      /* ignore */
+      return null;
     }
   }
 

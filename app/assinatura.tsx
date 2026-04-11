@@ -8,6 +8,7 @@ import { Button } from "@/components/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import * as billingService from "@/services/billing/billing.service";
+import { waitForBillingAccess } from "@/services/billing/waitForAccess";
 
 function formatTrialEnd(iso?: string) {
   if (!iso) return "";
@@ -50,10 +51,17 @@ export default function AssinaturaScreen() {
         url,
         "converso://billing/success"
       );
-      await refreshProfile();
       if (result.type === "success") {
-        router.replace("/(tabs)/home");
+        const ok = await waitForBillingAccess(refreshProfile);
+        if (ok) {
+          router.replace("/(tabs)/home");
+          return;
+        }
+        setError(
+          "O Stripe confirmou o pagamento, mas o acesso ainda não atualizou. Aguarde um instante e puxe para atualizar, ou abra o app de novo."
+        );
       }
+      await refreshProfile();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível abrir o pagamento");
     } finally {

@@ -1,9 +1,5 @@
 minimumReleaseAge: 1440
 
-minimumReleaseAgeExclude:
-  - '@replit/*'
-  - stripe-replit-sync
-
 packages:
   - '.'
 

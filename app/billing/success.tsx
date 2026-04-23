@@ -4,7 +4,6 @@ import { View } from "react-native";
 import { ScreenSpinner } from "@/components/Spinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { waitForBillingAccess } from "@/services/billing/waitForAccess";
 
 export default function BillingSuccessScreen() {
   const c = useTheme();
@@ -13,9 +12,9 @@ export default function BillingSuccessScreen() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const ok = await waitForBillingAccess(refreshProfile);
+      const profile = await refreshProfile();
       if (cancelled) return;
-      if (ok) {
+      if (profile?.hasAccess) {
         router.replace("/(tabs)/home");
       } else {
         router.replace("/assinatura" as Href);

@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   Platform,
   StyleSheet,
   Text,
@@ -15,9 +14,6 @@ import { Button } from "@/components/Button";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme, useThemeMode } from "@/contexts/ThemeContext";
-import { getAxiosErrorMessage } from "@/services/http/errors";
-import * as billingService from "@/services/billing/billing.service";
-
 function Row({
   icon,
   label,
@@ -55,13 +51,12 @@ export default function PerfilScreen() {
   const c = useTheme();
   const { theme, toggleTheme } = useThemeMode();
   const insets = useSafeAreaInsets();
-  const { user, logout, refreshProfile } = useAuth();
+  const { user, logout } = useAuth();
 
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(user?.name ?? "");
   const [savingName, setSavingName] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
-  const [billingBusy, setBillingBusy] = useState(false);
 
   const initials = (user?.name ?? user?.email ?? "?")
     .split(" ")
@@ -89,69 +84,6 @@ export default function PerfilScreen() {
 
   async function handleLogout() {
     await logout();
-  }
-
-  const stripeActive =
-    user?.stripeSubscriptionStatus === "active" ||
-    user?.stripeSubscriptionStatus === "trialing";
-  const showProBilling = user?.plan === "pro" && stripeActive;
-  const cancelScheduled = Boolean(user?.subscriptionCancelAtPeriodEnd);
-
-  function formatPeriodEnd(iso?: string | null) {
-    if (!iso) return "";
-    try {
-      return new Date(iso).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      });
-    } catch {
-      return "";
-    }
-  }
-
-  function confirmCancelSubscription() {
-    Alert.alert(
-      "Cancelar assinatura",
-      "Seu acesso ao Converso Pro continua até o fim do período já pago. Depois disso a conta volta ao plano gratuito.",
-      [
-        { text: "Voltar", style: "cancel" },
-        {
-          text: "Confirmar cancelamento",
-          style: "destructive",
-          onPress: () => void runCancelSubscription(),
-        },
-      ]
-    );
-  }
-
-  async function runCancelSubscription() {
-    setBillingBusy(true);
-    try {
-      const res = await billingService.cancelSubscriptionAtPeriodEnd();
-      await refreshProfile();
-      Alert.alert(
-        "Cancelamento agendado",
-        `Você mantém o Pro até ${formatPeriodEnd(res.currentPeriodEnd) || "a data indicada na fatura"}.`
-      );
-    } catch (e) {
-      Alert.alert("Não foi possível cancelar", getAxiosErrorMessage(e));
-    } finally {
-      setBillingBusy(false);
-    }
-  }
-
-  async function runReactivateSubscription() {
-    setBillingBusy(true);
-    try {
-      await billingService.reactivateSubscription();
-      await refreshProfile();
-      Alert.alert("Assinatura mantida", "A renovação automática continua ativa.");
-    } catch (e) {
-      Alert.alert("Não foi possível reativar", getAxiosErrorMessage(e));
-    } finally {
-      setBillingBusy(false);
-    }
   }
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -254,69 +186,6 @@ export default function PerfilScreen() {
             </TouchableOpacity>
           </View>
         </View>
-
-        {showProBilling ? (
-          <View style={styles.sectionWrap}>
-            <Text style={[styles.sectionLabel, { color: c.textMuted }]}>ASSINATURA</Text>
-            <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
-              {cancelScheduled ? (
-                <>
-                  <View style={[styles.row, { borderBottomColor: c.borderLight }]}>
-                    <View style={[styles.rowIconWrap, { backgroundColor: c.tint + "15" }]}>
-                      <Feather name="calendar" size={18} color={c.tint} />
-                    </View>
-                    <View style={styles.rowContent}>
-                      <Text style={[styles.rowLabel, { color: c.text }]}>Cancelamento agendado</Text>
-                      <Text style={[styles.rowValue, { color: c.textMuted }]}>
-                        Acesso Pro até{" "}
-                        {formatPeriodEnd(user?.subscriptionPeriodEnd ?? null) || "—"}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    style={[styles.row, { borderBottomColor: "transparent" }]}
-                    onPress={() => void runReactivateSubscription()}
-                    disabled={billingBusy}
-                    activeOpacity={0.7}
-                  >
-                    <View style={[styles.rowIconWrap, { backgroundColor: c.tint + "15" }]}>
-                      <Feather name="refresh-ccw" size={18} color={c.tint} />
-                    </View>
-                    <View style={styles.rowContent}>
-                      <Text style={[styles.rowLabel, { color: c.text }]}>
-                        {billingBusy ? "Aguarde…" : "Manter assinatura"}
-                      </Text>
-                      <Text style={[styles.rowValue, { color: c.textMuted }]}>
-                        Volta a renovar automaticamente
-                      </Text>
-                    </View>
-                    <Feather name="chevron-right" size={16} color={c.textMuted} />
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.row, { borderBottomColor: "transparent" }]}
-                  onPress={confirmCancelSubscription}
-                  disabled={billingBusy}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.rowIconWrap, { backgroundColor: "#ef444418" }]}>
-                    <Feather name="x-circle" size={18} color="#ef4444" />
-                  </View>
-                  <View style={styles.rowContent}>
-                    <Text style={[styles.rowLabel, { color: "#ef4444" }]}>
-                      {billingBusy ? "Aguarde…" : "Cancelar assinatura"}
-                    </Text>
-                    <Text style={[styles.rowValue, { color: c.textMuted }]}>
-                      Ao fim do período pago, volta ao plano gratuito
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={16} color="#ef4444" />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        ) : null}
 
         {/* Conta */}
         <View style={styles.sectionWrap}>

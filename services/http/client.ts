@@ -67,7 +67,7 @@ api.interceptors.response.use(
       const data = error.response?.data;
       const msg = data && typeof data === "object" && "message" in data
         ? getApiErrorMessage(data)
-        : "Assinatura necessária";
+        : "Plano ativo necessário. Use o site do Converso com uma conta com assinatura ativa.";
       return Promise.reject(new Error(msg));
     }
 

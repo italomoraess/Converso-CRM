@@ -1,14 +1,17 @@
 import { Feather } from "@expo/vector-icons";
-import * as WebBrowser from "expo-web-browser";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import * as billingService from "@/services/billing/billing.service";
-import { waitForBillingAccess } from "@/services/billing/waitForAccess";
 
 function formatTrialEnd(iso?: string) {
   if (!iso) return "";
@@ -29,8 +32,7 @@ export default function AssinaturaScreen() {
   const c = useTheme();
   const insets = useSafeAreaInsets();
   const { user, refreshProfile, logout } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -42,58 +44,58 @@ export default function AssinaturaScreen() {
   const inTrial =
     user?.trialEndsAt && new Date(user.trialEndsAt) > new Date();
 
-  async function openCheckout() {
-    setLoading(true);
-    setError(null);
+  async function onRefresh() {
+    setRefreshing(true);
     try {
-      const { url } = await billingService.createCheckoutSession();
-      const result = await WebBrowser.openAuthSessionAsync(
-        url,
-        "converso://billing/success"
-      );
-      if (result.type === "success") {
-        const ok = await waitForBillingAccess(refreshProfile);
-        if (ok) {
-          router.replace("/(tabs)/home");
-          return;
-        }
-        setError(
-          "O Stripe confirmou o pagamento, mas o acesso ainda não atualizou. Aguarde um instante e puxe para atualizar, ou abra o app de novo."
-        );
-      }
       await refreshProfile();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível abrir o pagamento");
     } finally {
-      setLoading(false);
+      setRefreshing(false);
     }
   }
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 24, backgroundColor: c.background }]}>
+    <ScrollView
+      style={[styles.root, { backgroundColor: c.background }]}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 },
+      ]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
+          tintColor={c.tint}
+        />
+      }
+    >
       <View style={[styles.iconWrap, { backgroundColor: c.tint + "18" }]}>
-        <Feather name="credit-card" size={40} color={c.tint} />
+        <Feather name="user-x" size={40} color={c.tint} />
       </View>
-      <Text style={[styles.title, { color: c.text }]}>Assinatura Converso</Text>
+      <Text style={[styles.title, { color: c.text }]}>Conta sem acesso ativo</Text>
       <Text style={[styles.sub, { color: c.textMuted }]}>
         {inTrial
-          ? `Seu teste gratuito vai até ${trialEnds}. Assine agora para não perder o acesso quando o período acabar.`
-          : "Seu período de teste de 3 dias terminou. Assine para continuar usando o CRM."}
+          ? `Seu teste gratuito vai até ${trialEnds}. Use uma conta com plano ativo ou ative a assinatura no site do Converso com o mesmo e-mail.`
+          : "O período de teste encerrou ou esta conta ainda não tem plano ativo. No site do Converso, ative ou renove a assinatura com o mesmo e-mail e volte aqui."}
       </Text>
-      {error ? (
-        <Text style={[styles.err, { color: "#ef4444" }]}>{error}</Text>
-      ) : null}
-      <Button label="Assinar com cartão" onPress={openCheckout} loading={loading} />
+      <Text style={[styles.hint, { color: c.textSecondary }]}>
+        Depois de ativar no site, puxe a tela para baixo ou use Atualizar para validar o acesso.
+      </Text>
+      <Button
+        label="Atualizar"
+        onPress={() => void onRefresh()}
+        loading={refreshing}
+      />
       <View style={{ height: 12 }} />
       <Button label="Sair da conta" onPress={() => void logout()} color={c.textMuted} />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
+  root: { flex: 1 },
+  content: {
     paddingHorizontal: 24,
+    flexGrow: 1,
   },
   iconWrap: {
     width: 88,
@@ -114,11 +116,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     textAlign: "center",
-    marginBottom: 28,
+    marginBottom: 12,
   },
-  err: {
+  hint: {
     fontSize: 14,
+    lineHeight: 20,
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 28,
   },
 });
